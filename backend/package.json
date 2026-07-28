@@ -1,0 +1,41 @@
+{
+  "name": "expense-home-backend",
+  "version": "1.0.0",
+  "description": "Backend API for expense-home — Node.js + Express + Prisma + PostgreSQL",
+  "main": "src/server.js",
+  "type": "module",
+  "scripts": {
+    "dev": "node --watch src/server.js",
+    "start": "node src/server.js",
+    "lint": "node --check src/**/*.js",
+    "prisma:migrate": "prisma migrate dev",
+    "prisma:seed": "node prisma/seed.js",
+    "db:generate": "prisma generate",
+    "db:migrate": "prisma migrate dev",
+    "db:migrate:deploy": "prisma migrate deploy",
+    "db:seed": "node prisma/seed.js",
+    "db:reset": "prisma migrate reset",
+    "db:studio": "prisma studio",
+    "db:import": "node scripts/import-base44.js",
+    "db:import-csv": "node scripts/import-csv.js",
+    "db:fix-dates": "node scripts/fix-dates.js",
+    "db:export": "node scripts/export-data.js",
+    "db:clean": "node scripts/clean-data.js",
+    "db:import-backup": "node scripts/import-backup.js",
+    "db:mark-paid": "node scripts/mark-month-paid.js",
+    "db:fix-import": "node scripts/fix-and-import.js"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.3.0",
+    "bcrypt": "^5.1.1",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.2",
+    "jsonwebtoken": "^9.0.2",
+    "nodemailer": "^8.0.7",
+    "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "prisma": "^6.3.0"
+  }
+}

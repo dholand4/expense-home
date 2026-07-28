@@ -1,0 +1,24 @@
+# Dependencies
+node_modules/
+
+# Environment — contains DB credentials, JWT secret, admin password
+.env
+.env.*
+!.env.example
+
+# Data exports / backups
+exports/
+
+# Logs
+*.log
+npm-debug.log*
+logs/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/*
+!.vscode/extensions.json
+.idea/
