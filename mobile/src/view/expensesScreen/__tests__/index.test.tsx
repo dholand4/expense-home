@@ -1,0 +1,38 @@
+import { NavigationContainer } from '@react-navigation/native';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { render } from '@testing-library/react-native';
+import React from 'react';
+import { ThemeProvider } from 'styled-components/native';
+import { theme } from '../../../constants/theme';
+import { ExpensesScreen } from '../index';
+
+jest.mock('../../../hooks/useExpenses', () => ({
+  useExpenses: () => ({ expenses: [], isLoading: false, createExpense: jest.fn(), removeExpense: jest.fn() }),
+}));
+jest.mock('../../../hooks/useCards', () => ({ useCards: () => ({ cards: [] }) }));
+jest.mock('../../../hooks/useBillAccounts', () => ({ useBillAccounts: () => ({ billAccounts: [] }) }));
+
+const queryClient = new QueryClient();
+
+const wrap = (ui: React.ReactElement) =>
+  render(
+    <QueryClientProvider client={queryClient}>
+      <NavigationContainer>
+        <ThemeProvider theme={theme}>{ui}</ThemeProvider>
+      </NavigationContainer>
+    </QueryClientProvider>,
+  );
+
+describe('ExpensesScreen', () => {
+  it('renders without crashing', () => {
+    expect(wrap(<ExpensesScreen />).toJSON()).toBeTruthy();
+  });
+
+  it('shows title', () => {
+    expect(wrap(<ExpensesScreen />).getByText('Lançamentos')).toBeTruthy();
+  });
+
+  it('shows empty state when no expenses', () => {
+    expect(wrap(<ExpensesScreen />).getByText('Nenhum lançamento')).toBeTruthy();
+  });
+});
