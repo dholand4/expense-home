@@ -1,0 +1,203 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Enums ────────────────────────────────────────────────────────────────────
+
+enum UserRole {
+  admin
+  user
+}
+
+enum UserStatus {
+  active
+  invited
+  disabled
+}
+
+enum PaymentType {
+  avista
+  parcelado
+  recorrente
+}
+
+enum ExpenseCategory {
+  alimentacao
+  transporte
+  moradia
+  saude
+  educacao
+  lazer
+  vestuario
+  tecnologia
+  assinaturas
+  financiamento
+  emprestimo
+  pet
+  outros
+}
+
+enum SourceType {
+  card
+  bill_account
+}
+
+enum SharedAccessStatus {
+  pending
+  accepted
+  rejected
+}
+
+// ─── Models ───────────────────────────────────────────────────────────────────
+
+model User {
+  id            String     @id @default(uuid()) @db.Uuid
+  email         String     @unique
+  full_name     String?
+  password_hash String
+  role          UserRole   @default(user)
+  status        UserStatus @default(active)
+  created_at    DateTime   @default(now())
+  updated_at    DateTime   @updatedAt
+
+  cards                 Card[]
+  bill_accounts         BillAccount[]
+  expenses              Expense[]
+  installment_payments  InstallmentPayment[]
+  card_invoice_payments CardInvoicePayment[]
+  running_debts         RunningDebt[]
+  shared_accesses_owned SharedAccess[]       @relation("SharedAccessOwner")
+  shared_accesses_with  SharedAccess[]       @relation("SharedAccessSharedWith")
+
+  @@map("users")
+}
+
+model Card {
+  id           String   @id @default(uuid()) @db.Uuid
+  name         String
+  credit_limit Decimal  @db.Decimal(12, 2)
+  due_day      Int
+  created_by   String   @db.Uuid
+  created_at   DateTime @default(now())
+  updated_at   DateTime @updatedAt
+
+  creator               User                 @relation(fields: [created_by], references: [id])
+  card_invoice_payments CardInvoicePayment[]
+
+  @@index([created_by])
+  @@map("cards")
+}
+
+model BillAccount {
+  id          String   @id @default(uuid()) @db.Uuid
+  name        String
+  description String?
+  due_day     Int?
+  created_by  String   @db.Uuid
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+
+  creator User @relation(fields: [created_by], references: [id])
+
+  @@index([created_by])
+  @@map("bill_accounts")
+}
+
+model Expense {
+  id                String           @id @default(uuid()) @db.Uuid
+  description       String
+  total_amount      Decimal          @db.Decimal(12, 2)
+  installments      Int
+  first_charge_date DateTime         @db.Date
+  payment_type      PaymentType      @default(avista)
+  category          ExpenseCategory?
+  source_type       SourceType
+  source_id         String           @db.Uuid
+  created_by        String           @db.Uuid
+  created_at        DateTime         @default(now())
+  updated_at        DateTime         @updatedAt
+
+  creator              User                 @relation(fields: [created_by], references: [id])
+  installment_payments InstallmentPayment[]
+
+  @@index([created_by])
+  @@index([source_type, source_id])
+  @@map("expenses")
+}
+
+model InstallmentPayment {
+  id                 String   @id @default(uuid()) @db.Uuid
+  expense_id         String   @db.Uuid
+  installment_number Int
+  paid_amount        Decimal  @db.Decimal(12, 2)
+  paid_date          DateTime @db.Date
+  month_key          String   @db.VarChar(7)
+  created_by         String   @db.Uuid
+  created_at         DateTime @default(now())
+  updated_at         DateTime @updatedAt
+
+  expense Expense @relation(fields: [expense_id], references: [id], onDelete: Cascade)
+  creator User    @relation(fields: [created_by], references: [id])
+
+  @@index([created_by])
+  @@index([expense_id])
+  @@index([month_key])
+  @@map("installment_payments")
+}
+
+model CardInvoicePayment {
+  id          String   @id @default(uuid()) @db.Uuid
+  card_id     String   @db.Uuid
+  month_key   String   @db.VarChar(7)
+  paid_amount Decimal  @db.Decimal(12, 2)
+  paid_date   DateTime @db.Date
+  created_by  String   @db.Uuid
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+
+  card    Card @relation(fields: [card_id], references: [id], onDelete: Cascade)
+  creator User @relation(fields: [created_by], references: [id])
+
+  @@index([created_by])
+  @@index([card_id])
+  @@index([month_key])
+  @@map("card_invoice_payments")
+}
+
+model RunningDebt {
+  id           String   @id @default(uuid()) @db.Uuid
+  name         String
+  total_amount Decimal  @db.Decimal(12, 2)
+  amount_paid  Decimal  @default(0) @db.Decimal(12, 2)
+  notes        String?
+  created_by   String   @db.Uuid
+  created_at   DateTime @default(now())
+  updated_at   DateTime @updatedAt
+
+  creator User @relation(fields: [created_by], references: [id])
+
+  @@index([created_by])
+  @@map("running_debts")
+}
+
+model SharedAccess {
+  id                String             @id @default(uuid()) @db.Uuid
+  owner_email       String
+  shared_with_email String
+  status            SharedAccessStatus @default(pending)
+  created_at        DateTime           @default(now())
+  updated_at        DateTime           @updatedAt
+
+  owner       User @relation("SharedAccessOwner", fields: [owner_email], references: [email])
+  shared_with User @relation("SharedAccessSharedWith", fields: [shared_with_email], references: [email])
+
+  @@unique([owner_email, shared_with_email])
+  @@index([owner_email])
+  @@index([shared_with_email])
+  @@map("shared_accesses")
+}
