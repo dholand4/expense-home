@@ -1,0 +1,39 @@
+{
+  "expo": {
+    "name": "DQ Finanças",
+    "slug": "expense-home-mobile",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "scheme": "dqfinancas",
+    "icon": "./src/assets/icon.png",
+    "userInterfaceStyle": "dark",
+    "splash": {
+      "image": "./src/assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0d1a14"
+    },
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.dqfinancas.app",
+      "icon": "./src/assets/icon.png"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./src/assets/adaptive-icon.png",
+        "backgroundColor": "#0d1a14"
+      },
+      "package": "com.dqfinancas.app",
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [{ "scheme": "dqfinancas" }],
+          "category": ["BROWSABLE", "DEFAULT"]
+        }
+      ]
+    },
+    "web": {
+      "favicon": "./src/assets/icon.png"
+    }
+  }
+}
