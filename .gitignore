@@ -1,0 +1,25 @@
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/*
+!.vscode/extensions.json
+.idea/
+.claude/
+
+# Backups de banco de dados (nunca commitar)
+*.backup.json
+*-fixed.json
+backup-*.json
+
+# Variáveis de ambiente (nunca commitar)
+.env
+.env.local
+.env.local.*
+backend/.env
+backend/.env.*
+!backend/.env.example
+frontend/.env.local
+frontend/.env.local.*
+!frontend/.env.local.example
