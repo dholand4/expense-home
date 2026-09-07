@@ -12,6 +12,16 @@
       "resizeMode": "contain",
       "backgroundColor": "#0d1a14"
     },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "fallbackToCacheTimeout": 3000,
+      "url": "https://u.expo.dev/0ed41d68-929a-4777-bc29-6e68878a4826"
+    },
+    "plugins": [
+      "expo-updates"
+    ],
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.dqfinancas.app",
@@ -23,17 +33,31 @@
         "backgroundColor": "#0d1a14"
       },
       "package": "com.dqfinancas.app",
+      "softwareKeyboardLayoutMode": "resize",
       "intentFilters": [
         {
           "action": "VIEW",
           "autoVerify": true,
-          "data": [{ "scheme": "dqfinancas" }],
-          "category": ["BROWSABLE", "DEFAULT"]
+          "data": [
+            {
+              "scheme": "dqfinancas"
+            }
+          ],
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
         }
       ]
     },
     "web": {
       "favicon": "./src/assets/icon.png"
-    }
+    },
+    "extra": {
+      "eas": {
+        "projectId": "0ed41d68-929a-4777-bc29-6e68878a4826"
+      }
+    },
+    "owner": "dholand4"
   }
 }
