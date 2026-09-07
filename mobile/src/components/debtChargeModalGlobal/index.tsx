@@ -15,7 +15,7 @@ import { formatCurrencyInput, parseCurrencyInput } from '../../utils/mask';
 import { ScrollView, View } from 'react-native';
 
 const schema = z.object({
-  paid_amount: z.string().min(1, 'Informe o valor pago'),
+  amount: z.string().min(1, 'Informe o valor'),
   notes: z.string().optional(),
 });
 
@@ -28,28 +28,23 @@ interface IProps {
   onConfirm: (id: string, amount: number, notes?: string) => Promise<void>;
 }
 
-export function debtPaymentModalGlobal({ visible, debt, onClose, onConfirm }: IProps) {
+export function debtChargeModalGlobal({ visible, debt, onClose, onConfirm }: IProps) {
   const theme = useTheme();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const { control, handleSubmit, reset, formState: { errors } } = useForm<IFormData>({
     resolver: zodResolver(schema),
-    defaultValues: { paid_amount: '', notes: '' },
+    defaultValues: { amount: '', notes: '' },
   });
 
   const handleClose = () => { reset(); onClose(); };
 
   const onFormSubmit = async (data: IFormData) => {
     if (!debt) return;
-    const amount = parseCurrencyInput(data.paid_amount);
-    const remaining = debt.total_amount - debt.amount_paid;
+    const amount = parseCurrencyInput(data.amount);
 
     if (isNaN(amount) || amount <= 0) {
       Alert.alert('Valor inválido', 'Informe um valor maior que zero.');
-      return;
-    }
-    if (amount > remaining) {
-      Alert.alert('Valor excedido', `O valor não pode ser maior que o restante: ${formatCurrency(remaining)}`);
       return;
     }
 
@@ -59,7 +54,7 @@ export function debtPaymentModalGlobal({ visible, debt, onClose, onConfirm }: IP
       reset();
       onClose();
     } catch (err: any) {
-      Alert.alert('Erro', err?.message || 'Não foi possível registrar o pagamento.');
+      Alert.alert('Erro', err?.message || 'Não foi possível adicionar o gasto ao fiado.');
     } finally {
       setIsSubmitting(false);
     }
@@ -69,7 +64,7 @@ export function debtPaymentModalGlobal({ visible, debt, onClose, onConfirm }: IP
     <FluidModalGlobal
       visible={visible}
       onClose={handleClose}
-      title="Registrar Pagamento"
+      title="Adicionar ao Fiado"
       subtitle={debt?.name}
     >
       <ScrollView
@@ -84,28 +79,22 @@ export function debtPaymentModalGlobal({ visible, debt, onClose, onConfirm }: IP
               <PreviewValue>{debt.name}</PreviewValue>
             </PreviewRow>
             <PreviewRow>
-              <PreviewLabel>Saldo a pagar</PreviewLabel>
-              <PreviewValue style={{ color: theme.colors.primaryLight }}>
-                {formatCurrency(debt.total_amount - debt.amount_paid)}
-              </PreviewValue>
-            </PreviewRow>
-            <PreviewRow>
-              <PreviewLabel>Total acumulado</PreviewLabel>
+              <PreviewLabel>Total Atual</PreviewLabel>
               <PreviewValue>{formatCurrency(debt.total_amount)}</PreviewValue>
             </PreviewRow>
           </PreviewBox>
         )}
         <Controller
           control={control}
-          name="paid_amount"
+          name="amount"
           render={({ field }) => (
             <InputGlobal
-              label="Valor pago agora (R$)"
+              label="Valor a adicionar (R$)"
               keyboardType="numeric"
               placeholder="0,00"
               value={field.value}
               onChangeText={(text) => field.onChange(formatCurrencyInput(text))}
-              error={errors.paid_amount?.message}
+              error={errors.amount?.message}
             />
           )}
         />
@@ -114,14 +103,14 @@ export function debtPaymentModalGlobal({ visible, debt, onClose, onConfirm }: IP
           name="notes"
           render={({ field }) => (
             <InputGlobal
-              label="Observação (opcional)"
-              placeholder="Ex: PIX, dinheiro, etc."
+              label="Descrição / Itens (opcional)"
+              placeholder="Ex: 2 cervejas, almoço..."
               value={field.value}
               onChangeText={field.onChange}
             />
           )}
         />
-        <ButtonGlobal label="Confirmar Pagamento" onPress={handleSubmit(onFormSubmit)} loading={isSubmitting} />
+        <ButtonGlobal label="Adicionar Valor ao Fiado" onPress={handleSubmit(onFormSubmit)} loading={isSubmitting} />
       </ScrollView>
     </FluidModalGlobal>
   );

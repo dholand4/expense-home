@@ -2,14 +2,16 @@ import { Ionicons } from '@expo/vector-icons';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { addMonths, format, getDate, setDate } from 'date-fns';
 import React, { useMemo, useState } from 'react';
-import { Alert, Modal, ScrollView as RNScrollView, TouchableOpacity } from 'react-native';
+import { Alert, Modal, ScrollView as RNScrollView, TouchableOpacity, View } from 'react-native';
 import { Controller, useForm } from 'react-hook-form';
 import { useTheme } from 'styled-components/native';
 import { z } from 'zod';
 import { ICard, IBillAccount } from '../../@types/models';
 import { buttonGlobal as ButtonGlobal } from '../buttonGlobal';
 import { inputGlobal as InputGlobal } from '../inputGlobal';
-import { CATEGORIES, CATEGORY_LIST, calcCardAvailableLimit, formatCurrency, getMonthKey } from '../../utils/finance';
+import { FluidModalGlobal } from '../fluidModalGlobal';
+import { CATEGORIES, CATEGORY_LIST, calcCardAvailableLimit, formatCurrency } from '../../utils/finance';
+import { formatCurrencyInput, parseCurrencyInput } from '../../utils/mask';
 import {
   CategoryDot, CategoryItem, CategoryItemText,
   CategoryPickerCard, CategoryPickerHeader, CategoryPickerOverlay, CategoryPickerTitle,
@@ -71,7 +73,7 @@ export function expenseFormGlobal({ visible, onClose, onSubmit, cards, billAccou
   const installmentsStr = watch('installments');
   const category = watch('category');
 
-  const entered = parseFloat(totalAmountStr) || 0;
+  const entered = parseCurrencyInput(totalAmountStr);
   const installmentsCount = paymentType === 'avista' ? 1 : (parseInt(installmentsStr) || 1);
   const totalAmount = paymentType === 'parcelado' && amountMode === 'per' ? entered * installmentsCount : entered;
   const installmentValue = installmentsCount > 0 ? totalAmount / installmentsCount : 0;
@@ -117,9 +119,14 @@ export function expenseFormGlobal({ visible, onClose, onSubmit, cards, billAccou
     setIsSubmitting(true);
     try {
       const first_charge_date = data.source_type === 'card' ? calcFirstChargeDate() : format(new Date(), 'yyyy-MM-dd');
+      const parsedEntered = parseCurrencyInput(data.total_amount);
+      const finalAmount = paymentType === 'parcelado' && amountMode === 'per'
+        ? parsedEntered * installmentsCount
+        : parsedEntered;
+
       await onSubmit({
         ...data,
-        total_amount: parseFloat(data.total_amount),
+        total_amount: finalAmount,
         installments: installmentsCount,
         first_charge_date,
       });
@@ -132,20 +139,17 @@ export function expenseFormGlobal({ visible, onClose, onSubmit, cards, billAccou
   };
 
   return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={handleClose}>
-      <ModalOverlay>
-        <ModalCard>
-          <RNScrollView
-            showsVerticalScrollIndicator={false}
-            contentContainerStyle={{ paddingHorizontal: 24, paddingTop: 24, paddingBottom: 32 }}
-            keyboardShouldPersistTaps="handled"
-          >
-          <TitleRow>
-              <ModalTitle>Novo lançamento</ModalTitle>
-              <CloseButton onPress={handleClose}>
-                <Ionicons name="close-circle" size={28} color={theme.colors.error} />
-              </CloseButton>
-            </TitleRow>
+    <FluidModalGlobal
+      visible={visible}
+      onClose={handleClose}
+      title="Novo Lançamento"
+    >
+      <RNScrollView
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+        contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 48 }}
+      >
+
             <Controller control={control} name="description" render={({ field }) => (
               <InputGlobal label="Descrição" placeholder="Ex: Supermercado" value={field.value} onChangeText={field.onChange} error={errors.description?.message} />
             )} />
@@ -156,7 +160,7 @@ export function expenseFormGlobal({ visible, onClose, onSubmit, cards, billAccou
                 placeholder="0,00"
                 keyboardType="numeric"
                 value={field.value}
-                onChangeText={field.onChange}
+                onChangeText={(text) => field.onChange(formatCurrencyInput(text))}
                 error={errors.total_amount?.message}
               />
             )} />
@@ -279,10 +283,10 @@ export function expenseFormGlobal({ visible, onClose, onSubmit, cards, billAccou
               </CategoryPickerOverlay>
             </Modal>
 
-            <ButtonGlobal label="Salvar lançamento" onPress={handleSubmit(onFormSubmit)} loading={isSubmitting} />
+            <View style={{ marginTop: 16 }}>
+              <ButtonGlobal label="Salvar lançamento" onPress={handleSubmit(onFormSubmit)} loading={isSubmitting} />
+            </View>
           </RNScrollView>
-        </ModalCard>
-      </ModalOverlay>
-    </Modal>
+        </FluidModalGlobal>
   );
 }

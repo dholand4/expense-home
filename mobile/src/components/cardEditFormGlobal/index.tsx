@@ -8,7 +8,9 @@ import { z } from 'zod';
 import { ICard } from '../../@types/models';
 import { buttonGlobal as ButtonGlobal } from '../buttonGlobal';
 import { inputGlobal as InputGlobal } from '../inputGlobal';
-import { CloseButton, ModalCard, ModalContent, ModalOverlay, ModalTitle, TitleRow } from '../expenseFormGlobal/style';
+import { FluidModalGlobal } from '../fluidModalGlobal';
+import { formatCurrencyInput, parseCurrencyInput } from '../../utils/mask';
+import { ScrollView, View } from 'react-native';
 
 const schema = z.object({
   name: z.string().min(1, 'Obrigatório'),
@@ -22,26 +24,36 @@ interface IProps {
   visible: boolean;
   card: ICard | null;
   onClose: () => void;
-  onSubmit: (id: string, data: Partial<Omit<ICard, 'id'>>) => Promise<void>;
+  onSubmit: (id: string, data: { name?: string; credit_limit?: number; due_day?: number }) => Promise<void>;
 }
 
 export function cardEditFormGlobal({ visible, card, onClose, onSubmit }: IProps) {
-  const theme = useTheme();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { control, handleSubmit, setValue, reset, formState: { errors } } = useForm<IFormData>({
+  const theme = useTheme();
+
+  const {
+    control,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<IFormData>({
     resolver: zodResolver(schema),
-    defaultValues: { name: '', credit_limit: '', due_day: '' },
+    defaultValues: {
+      name: '',
+      credit_limit: '',
+      due_day: '',
+    },
   });
 
   useEffect(() => {
     if (card) {
-      setValue('name', card.name);
-      setValue('credit_limit', String(card.credit_limit));
-      setValue('due_day', String(card.due_day));
+      reset({
+        name: card.name,
+        credit_limit: formatCurrencyInput(String(Math.round(card.credit_limit * 100))),
+        due_day: String(card.due_day),
+      });
     }
-  }, [card, setValue]);
-
-  const handleClose = () => { reset(); onClose(); };
+  }, [card, reset]);
 
   const onFormSubmit = async (data: IFormData) => {
     if (!card) return;
@@ -49,41 +61,64 @@ export function cardEditFormGlobal({ visible, card, onClose, onSubmit }: IProps)
     try {
       await onSubmit(card.id, {
         name: data.name,
-        credit_limit: parseFloat(data.credit_limit),
-        due_day: parseInt(data.due_day, 10),
+        credit_limit: parseCurrencyInput(data.credit_limit),
+        due_day: Number(data.due_day),
       });
       onClose();
     } catch {
-      Alert.alert('Erro', 'Não foi possível editar o cartão.');
+      Alert.alert('Erro', 'Não foi possível salvar as alterações.');
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  const handleClose = () => {
+    reset();
+    onClose();
+  };
+
   return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={handleClose}>
-      <ModalOverlay>
-        <ModalCard>
-          <ModalContent>
-            <TitleRow>
-              <ModalTitle>Editar cartão</ModalTitle>
-              <CloseButton onPress={handleClose}>
-                <Ionicons name="close-circle" size={28} color={theme.colors.error} />
-              </CloseButton>
-            </TitleRow>
-            <Controller control={control} name="name" render={({ field }) => (
-              <InputGlobal label="Nome" value={field.value} onChangeText={field.onChange} error={errors.name?.message} />
-            )} />
-            <Controller control={control} name="credit_limit" render={({ field }) => (
-              <InputGlobal label="Limite (R$)" keyboardType="numeric" value={field.value} onChangeText={field.onChange} error={errors.credit_limit?.message} />
-            )} />
-            <Controller control={control} name="due_day" render={({ field }) => (
-              <InputGlobal label="Dia de vencimento" keyboardType="numeric" value={field.value} onChangeText={field.onChange} error={errors.due_day?.message} />
-            )} />
-            <ButtonGlobal label="Salvar" onPress={handleSubmit(onFormSubmit)} loading={isSubmitting} />
-          </ModalContent>
-        </ModalCard>
-      </ModalOverlay>
-    </Modal>
+    <FluidModalGlobal
+      visible={visible}
+      onClose={handleClose}
+      title="Editar Cartão"
+      subtitle={card?.name}
+    >
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+        contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 24, gap: 12 }}
+      >
+        <Controller
+          control={control}
+          name="name"
+          render={({ field }) => (
+            <InputGlobal label="Nome" placeholder="Ex: Nubank" value={field.value} onChangeText={field.onChange} error={errors.name?.message} />
+          )}
+        />
+        <Controller
+          control={control}
+          name="credit_limit"
+          render={({ field }) => (
+            <InputGlobal
+              label="Limite (R$)"
+              placeholder="0,00"
+              keyboardType="numeric"
+              value={field.value}
+              onChangeText={(text) => field.onChange(formatCurrencyInput(text))}
+              error={errors.credit_limit?.message}
+            />
+          )}
+        />
+        <Controller
+          control={control}
+          name="due_day"
+          render={({ field }) => (
+            <InputGlobal label="Dia de vencimento" placeholder="10" keyboardType="numeric" value={field.value} onChangeText={field.onChange} error={errors.due_day?.message} />
+          )}
+        />
+        <ButtonGlobal label="Salvar alterações" onPress={handleSubmit(onFormSubmit)} loading={isSubmitting} />
+      </ScrollView>
+    </FluidModalGlobal>
   );
 }

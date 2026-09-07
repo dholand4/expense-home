@@ -1,15 +1,17 @@
 import { Ionicons } from '@expo/vector-icons';
 import { zodResolver } from '@hookform/resolvers/zod';
 import React, { useEffect, useState } from 'react';
-import { Alert, Modal } from 'react-native';
+import { Alert, ScrollView, View } from 'react-native';
 import { Controller, useForm } from 'react-hook-form';
 import { useTheme } from 'styled-components/native';
 import { z } from 'zod';
 import { ICard, ICardInvoicePayment } from '../../@types/models';
 import { buttonGlobal as ButtonGlobal } from '../buttonGlobal';
 import { inputGlobal as InputGlobal } from '../inputGlobal';
-import { CloseButton, ModalCard, ModalContent, ModalOverlay, ModalTitle, PreviewBox, PreviewLabel, PreviewRow, PreviewValue, TitleRow } from '../expenseFormGlobal/style';
+import { FluidModalGlobal } from '../fluidModalGlobal';
+import { PreviewBox, PreviewLabel, PreviewRow, PreviewValue } from '../expenseFormGlobal/style';
 import { formatCurrency } from '../../utils/finance';
+import { formatCurrencyInput, parseCurrencyInput } from '../../utils/mask';
 
 const schema = z.object({
   paid_amount: z.string().min(1, 'Obrigatório'),
@@ -21,10 +23,10 @@ interface IProps {
   visible: boolean;
   card: ICard | null;
   totalAmount: number;
-  existingPayment: ICardInvoicePayment | null;
+  existingPayment?: ICardInvoicePayment | null;
   monthKey: string;
   onClose: () => void;
-  onCreate: (data: Omit<ICardInvoicePayment, 'id'>) => Promise<void>;
+  onCreate: (data: { card_id: string; month_key: string; paid_amount: number; paid_date: string }) => Promise<void>;
   onRemove: (id: string) => Promise<void>;
 }
 
@@ -39,7 +41,7 @@ export function cardInvoiceModalGlobal({ visible, card, totalAmount, existingPay
 
   useEffect(() => {
     if (visible && !isPaid) {
-      setValue('paid_amount', totalAmount.toFixed(2));
+      setValue('paid_amount', formatCurrencyInput(totalAmount));
     }
   }, [visible, isPaid, totalAmount, setValue]);
 
@@ -47,7 +49,7 @@ export function cardInvoiceModalGlobal({ visible, card, totalAmount, existingPay
 
   const onFormSubmit = async (data: IFormData) => {
     if (!card) return;
-    const amount = parseFloat(data.paid_amount);
+    const amount = parseCurrencyInput(data.paid_amount);
     if (isNaN(amount) || amount <= 0) {
       Alert.alert('Valor inválido', 'Informe um valor maior que zero.');
       return;
@@ -78,58 +80,64 @@ export function cardInvoiceModalGlobal({ visible, card, totalAmount, existingPay
   };
 
   return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={handleClose}>
-      <ModalOverlay>
-        <ModalCard>
-          <ModalContent>
-            <TitleRow>
-              <ModalTitle>Fatura do cartão</ModalTitle>
-              <CloseButton onPress={handleClose}>
-                <Ionicons name="close-circle" size={28} color={theme.colors.error} />
-              </CloseButton>
-            </TitleRow>
-            {card && (
-              <PreviewBox>
-                <PreviewRow>
-                  <PreviewLabel>Cartão</PreviewLabel>
-                  <PreviewValue>{card.name}</PreviewValue>
-                </PreviewRow>
-                <PreviewRow>
-                  <PreviewLabel>Total da fatura</PreviewLabel>
-                  <PreviewValue>{formatCurrency(totalAmount)}</PreviewValue>
-                </PreviewRow>
-                <PreviewRow>
-                  <PreviewLabel>Status</PreviewLabel>
-                  <PreviewValue>{isPaid ? '✓ Paga' : 'Pendente'}</PreviewValue>
-                </PreviewRow>
-                {existingPayment && (
-                  <PreviewRow>
-                    <PreviewLabel>Valor pago</PreviewLabel>
-                    <PreviewValue>{formatCurrency(existingPayment.paid_amount)}</PreviewValue>
-                  </PreviewRow>
-                )}
-              </PreviewBox>
+    <FluidModalGlobal
+      visible={visible}
+      onClose={handleClose}
+      title="Fatura do Cartão"
+      subtitle={card?.name}
+    >
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+        contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 24, gap: 14 }}
+      >
+        {card && (
+          <PreviewBox>
+            <PreviewRow>
+              <PreviewLabel>Cartão</PreviewLabel>
+              <PreviewValue>{card.name}</PreviewValue>
+            </PreviewRow>
+            <PreviewRow>
+              <PreviewLabel>Total da fatura</PreviewLabel>
+              <PreviewValue>{formatCurrency(totalAmount)}</PreviewValue>
+            </PreviewRow>
+            <PreviewRow>
+              <PreviewLabel>Status</PreviewLabel>
+              <PreviewValue style={{ color: isPaid ? theme.colors.success : theme.colors.warning }}>
+                {isPaid ? '✓ Fatura Paga' : 'Pendente de pagamento'}
+              </PreviewValue>
+            </PreviewRow>
+            {existingPayment && (
+              <PreviewRow>
+                <PreviewLabel>Valor pago</PreviewLabel>
+                <PreviewValue>{formatCurrency(existingPayment.paid_amount)}</PreviewValue>
+              </PreviewRow>
             )}
+          </PreviewBox>
+        )}
 
-            {isPaid ? (
-              <ButtonGlobal label="Desfazer pagamento" variant="outline" onPress={handleUndo} loading={isSubmitting} />
-            ) : (
-              <>
-                <Controller control={control} name="paid_amount" render={({ field }) => (
-                  <InputGlobal
-                    label="Valor a pagar (R$)"
-                    keyboardType="numeric"
-                    value={field.value}
-                    onChangeText={field.onChange}
-                    error={errors.paid_amount?.message}
-                  />
-                )} />
-                <ButtonGlobal label="Confirmar pagamento" onPress={handleSubmit(onFormSubmit)} loading={isSubmitting} />
-              </>
-            )}
-          </ModalContent>
-        </ModalCard>
-      </ModalOverlay>
-    </Modal>
+        {isPaid ? (
+          <ButtonGlobal label="Desfazer pagamento da fatura" variant="outline" onPress={handleUndo} loading={isSubmitting} />
+        ) : (
+          <>
+            <Controller
+              control={control}
+              name="paid_amount"
+              render={({ field }) => (
+                <InputGlobal
+                  label="Valor a pagar (R$)"
+                  keyboardType="numeric"
+                  placeholder="0,00"
+                  value={field.value}
+                  onChangeText={(text) => field.onChange(formatCurrencyInput(text))}
+                  error={errors.paid_amount?.message}
+                />
+              )}
+            />
+            <ButtonGlobal label="Confirmar pagamento" onPress={handleSubmit(onFormSubmit)} loading={isSubmitting} />
+          </>
+        )}
+      </ScrollView>
+    </FluidModalGlobal>
   );
 }

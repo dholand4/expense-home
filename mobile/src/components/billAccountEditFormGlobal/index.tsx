@@ -8,7 +8,8 @@ import { z } from 'zod';
 import { IBillAccount } from '../../@types/models';
 import { buttonGlobal as ButtonGlobal } from '../buttonGlobal';
 import { inputGlobal as InputGlobal } from '../inputGlobal';
-import { CloseButton, ModalCard, ModalContent, ModalOverlay, ModalTitle, TitleRow } from '../expenseFormGlobal/style';
+import { FluidModalGlobal } from '../fluidModalGlobal';
+import { ScrollView, View } from 'react-native';
 
 const schema = z.object({
   name: z.string().min(1, 'Obrigatório'),
@@ -61,29 +62,40 @@ export function billAccountEditFormGlobal({ visible, billAccount, onClose, onSub
   };
 
   return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={handleClose}>
-      <ModalOverlay>
-        <ModalCard>
-          <ModalContent>
-            <TitleRow>
-              <ModalTitle>Editar conta</ModalTitle>
-              <CloseButton onPress={handleClose}>
-                <Ionicons name="close-circle" size={28} color={theme.colors.error} />
-              </CloseButton>
-            </TitleRow>
-            <Controller control={control} name="name" render={({ field }) => (
-              <InputGlobal label="Nome" value={field.value} onChangeText={field.onChange} error={errors.name?.message} />
-            )} />
-            <Controller control={control} name="description" render={({ field }) => (
-              <InputGlobal label="Descrição (opcional)" value={field.value} onChangeText={field.onChange} />
-            )} />
-            <Controller control={control} name="due_day" render={({ field }) => (
-              <InputGlobal label="Dia de vencimento (opcional)" keyboardType="numeric" value={field.value} onChangeText={field.onChange} />
-            )} />
-            <ButtonGlobal label="Salvar" onPress={handleSubmit(onFormSubmit)} loading={isSubmitting} />
-          </ModalContent>
-        </ModalCard>
-      </ModalOverlay>
-    </Modal>
+    <FluidModalGlobal
+      visible={visible}
+      onClose={handleClose}
+      title="Editar Conta / Boleto"
+      subtitle={billAccount?.name}
+    >
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+        contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 24, gap: 12 }}
+      >
+        <Controller
+          control={control}
+          name="name"
+          render={({ field }) => (
+            <InputGlobal label="Nome" value={field.value} onChangeText={field.onChange} error={errors.name?.message} />
+          )}
+        />
+        <Controller
+          control={control}
+          name="description"
+          render={({ field }) => (
+            <InputGlobal label="Descrição (opcional)" value={field.value} onChangeText={field.onChange} />
+          )}
+        />
+        <Controller
+          control={control}
+          name="due_day"
+          render={({ field }) => (
+            <InputGlobal label="Dia de vencimento (opcional)" keyboardType="numeric" value={field.value} onChangeText={field.onChange} />
+          )}
+        />
+        <ButtonGlobal label="Salvar alterações" onPress={handleSubmit(onFormSubmit)} loading={isSubmitting} />
+      </ScrollView>
+    </FluidModalGlobal>
   );
 }
