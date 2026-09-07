@@ -50,7 +50,8 @@ export function getInstallments(expense: IExpense): IInstallment[] {
     const dueDate = addMonths(baseDate, i);
     installments.push({
       number: i + 1,
-      total: expense.total_amount,
+      total: count,
+      total_amount: expense.total_amount,
       value: expense.total_amount / count,
       due_date: format(dueDate, 'yyyy-MM-dd'),
       due_date_str: format(dueDate, 'dd/MM/yyyy'),

@@ -1,8 +1,9 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { StatusBar } from 'expo-status-bar';
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Text, View } from 'react-native';
 import Toast from 'react-native-toast-message';
+import * as Updates from 'expo-updates';
 import { ThemeProvider } from 'styled-components/native';
 import { theme } from './constants/theme';
 import { networkBannerGlobal as NetworkBanner } from './components/networkBannerGlobal';
@@ -53,6 +54,29 @@ class ErrorBoundary extends React.Component<
 }
 
 export default function App() {
+  useEffect(() => {
+    async function checkOta() {
+      if (__DEV__ || !Updates.isEnabled) return;
+      try {
+        const check = await Updates.checkForUpdateAsync();
+        if (check.isAvailable) {
+          await Updates.fetchUpdateAsync();
+          Toast.show({
+            type: 'info',
+            text1: '⚡ Nova atualização baixada!',
+            text2: 'Reiniciando para aplicar melhorias...',
+            visibilityTime: 2000,
+          });
+          setTimeout(() => {
+            Updates.reloadAsync();
+          }, 1500);
+        }
+      } catch {
+        // Ignora silenciosamente se estiver sem conexão
+      }
+    }
+    checkOta();
+  }, []);
   return (
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>

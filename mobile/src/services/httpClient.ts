@@ -1,4 +1,6 @@
 import { storage } from '../utils/storage';
+import { isSupabase } from './provider';
+import { handleSupabaseRequest } from './supabase/adapter';
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:3001/api';
 const TIMEOUT_MS = 10_000;
@@ -12,6 +14,10 @@ export function setUnauthorizedHandler(handler: () => void) {
 }
 
 async function request<T>(method: Method, path: string, body?: unknown): Promise<T> {
+  if (isSupabase) {
+    return handleSupabaseRequest<T>(method, path, body);
+  }
+
   const token = await storage.getToken();
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), TIMEOUT_MS);
@@ -30,7 +36,7 @@ async function request<T>(method: Method, path: string, body?: unknown): Promise
     clearTimeout(timeoutId);
 
     if (response.status === 401) {
-      const body = await response.json().catch(() => null);
+      const errorBody = await response.json().catch(() => null);
       // Só trata como sessão expirada se havia token (requisição autenticada)
       if (token) {
         await storage.removeToken();
@@ -38,7 +44,7 @@ async function request<T>(method: Method, path: string, body?: unknown): Promise
         throw new Error('Sessão expirada. Faça login novamente.');
       }
       // Login com credenciais erradas → usa mensagem do backend
-      throw new Error(body?.error ?? body?.message ?? 'E-mail ou senha inválidos.');
+      throw new Error(errorBody?.error ?? errorBody?.message ?? 'E-mail ou senha inválidos.');
     }
 
     if (response.status >= 500) {

@@ -37,6 +37,7 @@ export interface IExpense {
 export interface IInstallment {
   number: number;
   total: number;
+  total_amount?: number;
   value: number;
   due_date: string;
   due_date_str: string;
@@ -72,6 +73,18 @@ export interface IRunningDebt {
   total_amount: number;
   amount_paid: number;
   notes?: string;
+}
+
+export type DebtTransactionType = 'charge' | 'payment';
+
+export interface IRunningDebtTransaction {
+  id: string;
+  debt_id: string;
+  type: DebtTransactionType;
+  amount: number;
+  date: string;
+  notes?: string;
+  created_at?: string;
 }
 
 export interface ISharedAccess {
