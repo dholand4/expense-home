@@ -18,6 +18,7 @@ import { useBillAccounts } from '../../hooks/useBillAccounts';
 import { useExpenses } from '../../hooks/useExpenses';
 import { useInstallmentPayments } from '../../hooks/useInstallmentPayments';
 import { useCardInvoicePayments } from '../../hooks/useCardInvoicePayments';
+import { useIncomes } from '../../hooks/useIncomes';
 import { calcCardAvailableLimit, formatCurrency } from '../../utils/finance';
 import { formatCurrencyInput, parseCurrencyInput } from '../../utils/mask';
 import {
@@ -45,8 +46,6 @@ import {
   CardLimitRow,
   CardNumberSim,
   CardTopRow,
-  ConstructionTag,
-  ConstructionTagText,
   Container,
   DueDateBadge,
   DueDateText,
@@ -88,11 +87,8 @@ import {
   Subtitle,
   Title,
   TotalLimitText,
-  UnderConstructionBox,
-  UnderConstructionIconBox,
-  UnderConstructionSubtitle,
-  UnderConstructionTitle,
 } from './style';
+import { RevenuesView } from './RevenuesView';
 
 const cardSchema = z.object({
   name: z.string().min(1, 'Obrigatório'),
@@ -128,6 +124,7 @@ export function SourcesScreen() {
   const { expenses } = useExpenses();
   const { payments: allPayments } = useInstallmentPayments();
   const { invoicePayments } = useCardInvoicePayments();
+  const { incomes } = useIncomes();
 
   const [currentView, setCurrentView] = useState<'hub' | 'expenses' | 'revenues'>('hub');
   const [activeFilter, setActiveFilter] = useState<'all' | 'cards' | 'bills'>('all');
@@ -259,13 +256,15 @@ export function SourcesScreen() {
               <Ionicons name="trending-up-outline" size={26} color={theme.colors.success} />
             </SelectionIconBox>
             <SelectionInfo>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                <SelectionTitle>Receitas</SelectionTitle>
-                <ConstructionTag>
-                  <ConstructionTagText>Em construção</ConstructionTagText>
-                </ConstructionTag>
-              </View>
-              <SelectionDesc>Salários, rendimentos e outras fontes de renda</SelectionDesc>
+              <SelectionTitle>Receitas</SelectionTitle>
+              <SelectionDesc>Salários, rendimentos e divisão proporcional</SelectionDesc>
+              <SelectionBadgeRow>
+                <SelectionBadge>
+                  <SelectionBadgeText>
+                    {incomes.length} {incomes.length === 1 ? 'receita' : 'receitas'}
+                  </SelectionBadgeText>
+                </SelectionBadge>
+              </SelectionBadgeRow>
             </SelectionInfo>
             <Ionicons name="chevron-forward" size={22} color={theme.colors.textSecondary} />
           </SelectionCard>
@@ -275,30 +274,7 @@ export function SourcesScreen() {
   }
 
   if (currentView === 'revenues') {
-    return (
-      <Safe>
-        <Header>
-          <View style={{ flex: 1 }}>
-            <BackButton onPress={() => setCurrentView('hub')} activeOpacity={0.7}>
-              <Ionicons name="chevron-back" size={20} color={theme.colors.primary} />
-              <BackButtonText>Voltar para Fontes</BackButtonText>
-            </BackButton>
-            <Title>Receitas</Title>
-            <Subtitle>Fontes de entrada e rendimentos</Subtitle>
-          </View>
-        </Header>
-
-        <UnderConstructionBox>
-          <UnderConstructionIconBox>
-            <Ionicons name="construct-outline" size={42} color={theme.colors.warning} />
-          </UnderConstructionIconBox>
-          <UnderConstructionTitle>Em construção</UnderConstructionTitle>
-          <UnderConstructionSubtitle>
-            O módulo de fontes de receitas está sendo desenvolvido e estará disponível em breve!
-          </UnderConstructionSubtitle>
-        </UnderConstructionBox>
-      </Safe>
-    );
+    return <RevenuesView onBack={() => setCurrentView('hub')} />;
   }
 
   return (
