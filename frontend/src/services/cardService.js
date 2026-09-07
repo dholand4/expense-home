@@ -1,18 +1,10 @@
-import { api } from '@/api/httpClient';
+import * as custom from './custom/cardService';
+import * as supa from './supabase/cardService';
+import { isSupabase } from '@/api/provider';
 
-export async function listCards() {
-  return api.get('/cards');
-}
+const getService = () => (isSupabase ? supa : custom);
 
-export async function createCard(data) {
-  return api.post('/cards', data);
-}
-
-export async function updateCard(id, data) {
-  return api.patch(`/cards/${id}`, data);
-}
-
-export async function deleteCard(id) {
-  // Backend deletes linked expenses + payments in a transaction
-  return api.delete(`/cards/${id}`);
-}
+export const listCards = (...args) => getService().listCards(...args);
+export const createCard = (...args) => getService().createCard(...args);
+export const updateCard = (...args) => getService().updateCard(...args);
+export const deleteCard = (...args) => getService().deleteCard(...args);

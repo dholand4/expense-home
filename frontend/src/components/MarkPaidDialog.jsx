@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { formatCurrency } from '../utils/finance';
+import { formatCurrencyInput, parseCurrencyInput } from '../utils/mask';
 import { createPayment, deletePayment } from '../services/installmentPaymentService';
 import { format } from 'date-fns';
 
@@ -32,7 +33,7 @@ export default function MarkPaidDialog({ open, onClose, installment, monthKey, e
   };
 
   const handleMarkPartial = async () => {
-    const val = parseFloat(amount);
+    const val = parseCurrencyInput(amount);
     if (!val || val <= 0) return;
     setLoading(true);
     if (existingPayment) await deletePayment(existingPayment.id);
@@ -97,11 +98,11 @@ export default function MarkPaidDialog({ open, onClose, installment, monthKey, e
               <Label className="text-muted-foreground text-xs uppercase tracking-wider">Pagamento Parcial (R$)</Label>
               <div className="flex gap-2">
                 <Input
-                  type="number"
-                  step="0.01"
+                  type="text"
+                  inputMode="numeric"
                   placeholder="0,00"
                   value={amount}
-                  onChange={(e) => setAmount(e.target.value)}
+                  onChange={(e) => setAmount(formatCurrencyInput(e.target.value))}
                   className="bg-secondary border-border text-foreground"
                 />
                 <Button onClick={handleMarkPartial} disabled={loading || !amount} variant="outline" className="border-border shrink-0">

@@ -1,24 +1,11 @@
-import { api } from '@/api/httpClient';
+import * as custom from './custom/cardInvoicePaymentService';
+import * as supa from './supabase/cardInvoicePaymentService';
+import { isSupabase } from '@/api/provider';
 
-export async function listCardInvoicePayments() {
-  return api.get('/card-invoice-payments');
-}
+const getService = () => (isSupabase ? supa : custom);
 
-export async function getCardInvoicePayment(cardId, monthKey) {
-  const list = await api.get(
-    `/card-invoice-payments?card_id=${encodeURIComponent(cardId)}&month_key=${encodeURIComponent(monthKey)}`
-  );
-  return list[0] ?? null;
-}
-
-export async function createCardInvoicePayment(data) {
-  return api.post('/card-invoice-payments', data);
-}
-
-export async function updateCardInvoicePayment(id, data) {
-  return api.patch(`/card-invoice-payments/${id}`, data);
-}
-
-export async function deleteCardInvoicePayment(id) {
-  return api.delete(`/card-invoice-payments/${id}`);
-}
+export const listCardInvoicePayments = (...args) => getService().listCardInvoicePayments(...args);
+export const getCardInvoicePayment = (...args) => getService().getCardInvoicePayment(...args);
+export const createCardInvoicePayment = (...args) => getService().createCardInvoicePayment(...args);
+export const updateCardInvoicePayment = (...args) => getService().updateCardInvoicePayment(...args);
+export const deleteCardInvoicePayment = (...args) => getService().deleteCardInvoicePayment(...args);

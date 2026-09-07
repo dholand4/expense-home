@@ -4,6 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { createCard } from '../services/cardService';
+import { formatCurrencyInput, parseCurrencyInput } from '../utils/mask';
 
 export default function CardForm({ open, onClose, onSuccess }) {
   const [loading, setLoading] = useState(false);
@@ -11,10 +12,13 @@ export default function CardForm({ open, onClose, onSuccess }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    const limitVal = parseCurrencyInput(form.credit_limit);
+    if (!limitVal || limitVal <= 0) return;
+
     setLoading(true);
     await createCard({
       name: form.name,
-      credit_limit: parseFloat(form.credit_limit),
+      credit_limit: limitVal,
       due_day: parseInt(form.due_day),
     });
     setForm({ name: '', credit_limit: '', due_day: '' });
@@ -43,10 +47,10 @@ export default function CardForm({ open, onClose, onSuccess }) {
           <div className="space-y-2">
             <Label className="text-muted-foreground text-xs uppercase tracking-wider">Limite (R$)</Label>
             <Input
-              type="number"
-              step="0.01"
+              type="text"
+              inputMode="numeric"
               value={form.credit_limit}
-              onChange={(e) => setForm({ ...form, credit_limit: e.target.value })}
+              onChange={(e) => setForm({ ...form, credit_limit: formatCurrencyInput(e.target.value) })}
               placeholder="0,00"
               required
               className="bg-secondary border-border text-foreground"

@@ -1,3 +1,6 @@
+import { isSupabase } from './provider';
+import { handleSupabaseRequest } from './supabaseAdapter';
+
 const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:3001/api';
 const TOKEN_KEY = 'auth_token';
 
@@ -14,6 +17,10 @@ export function removeToken() {
 }
 
 async function request(method, path, body) {
+  if (isSupabase) {
+    return handleSupabaseRequest(method, path, body);
+  }
+
   const token = getToken();
   const headers = { 'Content-Type': 'application/json' };
   if (token) headers['Authorization'] = `Bearer ${token}`;

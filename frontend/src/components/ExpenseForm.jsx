@@ -6,6 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { createExpense } from '../services/expenseService';
 import { CATEGORIES, formatCurrency } from '../utils/finance';
+import { formatCurrencyInput, parseCurrencyInput } from '../utils/mask';
 import { addMonths, format, startOfMonth } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { ChevronLeft, CalendarClock, AlertTriangle } from 'lucide-react';
@@ -56,7 +57,7 @@ export default function ExpenseForm({ open, onClose, onSuccess, cards, billAccou
   const effectiveFirstChargeDate = isCard ? cardChargeDate : form.first_charge_date;
 
   const qty = parseInt(form.installments) || 1;
-  const entered = parseFloat(form.total_amount) || 0;
+  const entered = parseCurrencyInput(form.total_amount) || 0;
   const previewPerInstallment = paymentType === 'parcelado' && entered && qty >= 2
     ? (amountMode === 'total' ? entered / qty : entered)
     : null;
@@ -216,10 +217,10 @@ export default function ExpenseForm({ open, onClose, onSuccess, cards, billAccou
               {paymentType === 'parcelado' && amountMode === 'per' ? 'Valor por Parcela (R$)' : 'Valor Total (R$)'}
             </Label>
             <Input
-              type="number"
-              step="0.01"
+              type="text"
+              inputMode="numeric"
               value={form.total_amount}
-              onChange={(e) => setForm({ ...form, total_amount: e.target.value })}
+              onChange={(e) => setForm({ ...form, total_amount: formatCurrencyInput(e.target.value) })}
               placeholder="0,00"
               required
               className="bg-secondary border-border text-foreground"

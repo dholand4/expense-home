@@ -1,16 +1,11 @@
-import { api } from '@/api/httpClient';
+import * as custom from './custom/installmentPaymentService';
+import * as supa from './supabase/installmentPaymentService';
+import { isSupabase } from '@/api/provider';
 
-export const listPaymentsByMonth = (monthKey) =>
-  api.get(`/installment-payments?month_key=${encodeURIComponent(monthKey)}`);
+const getService = () => (isSupabase ? supa : custom);
 
-export const listAllPayments = () =>
-  api.get('/installment-payments');
-
-export const listPaymentsByExpense = (expenseId) =>
-  api.get(`/installment-payments?expense_id=${encodeURIComponent(expenseId)}`);
-
-export const createPayment = (data) =>
-  api.post('/installment-payments', data);
-
-export const deletePayment = (id) =>
-  api.delete(`/installment-payments/${id}`);
+export const listPaymentsByMonth = (...args) => getService().listPaymentsByMonth(...args);
+export const listAllPayments = (...args) => getService().listAllPayments(...args);
+export const listPaymentsByExpense = (...args) => getService().listPaymentsByExpense(...args);
+export const createPayment = (...args) => getService().createPayment(...args);
+export const deletePayment = (...args) => getService().deletePayment(...args);

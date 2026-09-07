@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { formatCurrency } from '../utils/finance';
+import { formatCurrencyInput, parseCurrencyInput } from '../utils/mask';
 import {
   getCardInvoicePayment,
   createCardInvoicePayment,
@@ -24,14 +25,14 @@ export default function CardInvoicePaymentDialog({ open, onClose, card, monthKey
     if (open && card) {
       getCardInvoicePayment(card.id, monthKey).then((p) => {
         setExisting(p);
-        setAmount(p ? String(p.paid_amount) : String(totalInvoice));
+        setAmount(p ? formatCurrencyInput(p.paid_amount) : formatCurrencyInput(totalInvoice));
         setDate(p ? p.paid_date : format(new Date(), 'yyyy-MM-dd'));
       });
     }
   }, [open, card, monthKey]);
 
   const handleSave = async () => {
-    const val = parseFloat(amount);
+    const val = parseCurrencyInput(amount);
     if (!val || val <= 0) return;
     setLoading(true);
     if (existing) {
@@ -93,11 +94,11 @@ export default function CardInvoicePaymentDialog({ open, onClose, card, monthKey
           <div className="space-y-2">
             <Label className="text-muted-foreground text-xs uppercase tracking-wider">Valor Pago (R$)</Label>
             <Input
-              type="number"
-              step="0.01"
+              type="text"
+              inputMode="numeric"
               placeholder="0,00"
               value={amount}
-              onChange={(e) => setAmount(e.target.value)}
+              onChange={(e) => setAmount(formatCurrencyInput(e.target.value))}
               className="bg-secondary border-border text-foreground"
             />
           </div>

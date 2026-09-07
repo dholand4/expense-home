@@ -1,17 +1,10 @@
-import { api } from '@/api/httpClient';
+import * as custom from './custom/expenseService';
+import * as supa from './supabase/expenseService';
+import { isSupabase } from '@/api/provider';
 
-export async function listExpenses() {
-  return api.get('/expenses');
-}
+const getService = () => (isSupabase ? supa : custom);
 
-export async function createExpense(data) {
-  return api.post('/expenses', data);
-}
-
-export async function updateExpense(id, data) {
-  return api.patch(`/expenses/${id}`, data);
-}
-
-export async function deleteExpense(id) {
-  return api.delete(`/expenses/${id}`);
-}
+export const listExpenses = (...args) => getService().listExpenses(...args);
+export const createExpense = (...args) => getService().createExpense(...args);
+export const updateExpense = (...args) => getService().updateExpense(...args);
+export const deleteExpense = (...args) => getService().deleteExpense(...args);

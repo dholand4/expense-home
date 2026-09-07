@@ -1,18 +1,10 @@
-import { api } from '@/api/httpClient';
+import * as custom from './custom/billAccountService';
+import * as supa from './supabase/billAccountService';
+import { isSupabase } from '@/api/provider';
 
-export async function listBillAccounts() {
-  return api.get('/bill-accounts');
-}
+const getService = () => (isSupabase ? supa : custom);
 
-export async function createBillAccount(data) {
-  return api.post('/bill-accounts', data);
-}
-
-export async function updateBillAccount(id, data) {
-  return api.patch(`/bill-accounts/${id}`, data);
-}
-
-export async function deleteBillAccount(id) {
-  // Backend deletes linked expenses + payments in a transaction
-  return api.delete(`/bill-accounts/${id}`);
-}
+export const listBillAccounts = (...args) => getService().listBillAccounts(...args);
+export const createBillAccount = (...args) => getService().createBillAccount(...args);
+export const updateBillAccount = (...args) => getService().updateBillAccount(...args);
+export const deleteBillAccount = (...args) => getService().deleteBillAccount(...args);
