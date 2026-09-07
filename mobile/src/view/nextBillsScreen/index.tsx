@@ -22,18 +22,22 @@ import {
   SourceSummaryCard, SourceSummaryName, SourceSummaryRow,
   SourceSummaryAmount, SourceSummaryStatus,
   SourceHeader, SourceExpandedContent,
-  InstallmentRow, InstallmentDesc, InstallmentValue,
+  InstallmentRow, InstallmentInfo, InstallmentDesc,
+  InstallmentMetaRow, InstallmentBadge, InstallmentBadgeText,
+  InstallmentRight, InstallmentValue,
   ShowMoreBtn, ShowMoreBtnText,
   SummaryBar, SummaryChip, SummaryChipLabel, SummaryChipValue,
-  Title, ToggleRow, ToggleText,
+  Title,
 } from './style';
 
 const ITEMS_LIMIT = 3;
 
+type StatusFilter = 'all' | 'paid' | 'unpaid';
+
 export function NextBillsScreen() {
   const theme = useTheme();
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [unpaidOnly, setUnpaidOnly] = useState(false);
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const [expandedSources, setExpandedSources] = useState<Set<string>>(new Set());
   const [showAllItems, setShowAllItems] = useState<Record<string, boolean>>({});
   const [paymentInstallment, setPaymentInstallment] = useState<IInstallment | null>(null);
@@ -109,11 +113,44 @@ export function NextBillsScreen() {
   }, [cards, billAccounts, monthInstallments, invoicePayments, monthPayments, monthKey]);
 
   const visibleSources = useMemo(() => {
-    if (!unpaidOnly) return sourceSummaries;
-    return sourceSummaries.filter((s) =>
-      s.type === 'card' ? !s.existingInvoice : !s.allPaid,
-    );
-  }, [sourceSummaries, unpaidOnly]);
+    if (statusFilter === 'all') return sourceSummaries;
+
+    if (statusFilter === 'paid') {
+      return sourceSummaries
+        .filter((s) => (s.type === 'card' ? !!s.existingInvoice : (s.paidCount ?? 0) > 0))
+        .map((s) => {
+          if (s.type === 'card') return s;
+          const paidInstallments = s.installments.filter((i) =>
+            isBillInstallmentPaid(i.expense_id, i.number),
+          );
+          return {
+            ...s,
+            installments: paidInstallments,
+            total: paidInstallments.reduce((acc, i) => acc + i.value, 0),
+            paidCount: paidInstallments.length,
+            allPaid: true,
+          };
+        });
+    }
+
+    // statusFilter === 'unpaid'
+    return sourceSummaries
+      .filter((s) => (s.type === 'card' ? !s.existingInvoice : !s.allPaid))
+      .map((s) => {
+        if (s.type === 'card') return s;
+        const unpaidInstallments = s.installments.filter(
+          (i) => !isBillInstallmentPaid(i.expense_id, i.number),
+        );
+        return {
+          ...s,
+          installments: unpaidInstallments,
+          total: unpaidInstallments.reduce((acc, i) => acc + i.value, 0),
+          paidCount: 0,
+          allPaid: false,
+        };
+      });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sourceSummaries, statusFilter, monthPayments]);
 
   const total = useMemo(() => monthInstallments.reduce((s, i) => s + i.value, 0), [monthInstallments]);
   const totalPaid = useMemo(() =>
@@ -198,32 +235,71 @@ export function NextBillsScreen() {
       </MonthNav>
 
       <SummaryBar>
-        <SummaryChip>
-          <SummaryChipLabel>Total</SummaryChipLabel>
-          <SummaryChipValue>{formatCurrency(total)}</SummaryChipValue>
+        <SummaryChip
+          active={statusFilter === 'all'}
+          activeColor={theme.colors.primary}
+          bgColor={theme.colors.primary + '22'}
+          activeOpacity={0.7}
+          onPress={() => setStatusFilter('all')}
+        >
+          <SummaryChipLabel active={statusFilter === 'all'} activeColor={theme.colors.primary}>
+            Total
+          </SummaryChipLabel>
+          <SummaryChipValue active={statusFilter === 'all'} activeColor={theme.colors.primary}>
+            {formatCurrency(total)}
+          </SummaryChipValue>
         </SummaryChip>
-        <SummaryChip color={theme.colors.success + '22'}>
-          <SummaryChipLabel>Pago</SummaryChipLabel>
-          <SummaryChipValue>{formatCurrency(totalPaid)}</SummaryChipValue>
+
+        <SummaryChip
+          active={statusFilter === 'paid'}
+          activeColor={theme.colors.success}
+          bgColor={theme.colors.success + '22'}
+          activeOpacity={0.7}
+          onPress={() => setStatusFilter((prev) => (prev === 'paid' ? 'all' : 'paid'))}
+        >
+          <SummaryChipLabel active={statusFilter === 'paid'} activeColor={theme.colors.success}>
+            Pago
+          </SummaryChipLabel>
+          <SummaryChipValue active={statusFilter === 'paid'} activeColor={theme.colors.success}>
+            {formatCurrency(totalPaid)}
+          </SummaryChipValue>
         </SummaryChip>
-        <SummaryChip color={theme.colors.warning + '22'}>
-          <SummaryChipLabel>Pendente</SummaryChipLabel>
-          <SummaryChipValue>{formatCurrency(total - totalPaid)}</SummaryChipValue>
+
+        <SummaryChip
+          active={statusFilter === 'unpaid'}
+          activeColor={theme.colors.warning}
+          bgColor={theme.colors.warning + '22'}
+          activeOpacity={0.7}
+          onPress={() => setStatusFilter((prev) => (prev === 'unpaid' ? 'all' : 'unpaid'))}
+        >
+          <SummaryChipLabel active={statusFilter === 'unpaid'} activeColor={theme.colors.warning}>
+            Pendente
+          </SummaryChipLabel>
+          <SummaryChipValue active={statusFilter === 'unpaid'} activeColor={theme.colors.warning}>
+            {formatCurrency(total - totalPaid)}
+          </SummaryChipValue>
         </SummaryChip>
       </SummaryBar>
 
       <ScrollView showsVerticalScrollIndicator={false}>
-        <ToggleRow active={unpaidOnly} onPress={() => setUnpaidOnly((v) => !v)}>
-          <Ionicons
-            name={unpaidOnly ? 'checkbox' : 'square-outline'}
-            size={18}
-            color={unpaidOnly ? theme.colors.primary : theme.colors.textSecondary}
-          />
-          <ToggleText active={unpaidOnly}>Mostrar apenas pendentes</ToggleText>
-        </ToggleRow>
-
         {visibleSources.length === 0 && (
-          <EmptyState icon="calendar-outline" title="Nenhuma fatura" description="Sem lançamentos neste mês" />
+          <EmptyState
+            icon="calendar-outline"
+            title={
+              statusFilter === 'paid'
+                ? 'Nenhuma fatura paga'
+                : statusFilter === 'unpaid'
+                ? 'Nenhuma fatura pendente'
+                : 'Nenhuma fatura'
+            }
+            description={
+              statusFilter === 'paid'
+                ? 'Nenhum pagamento registrado neste mês'
+                : statusFilter === 'unpaid'
+                ? 'Tudo em dia para este mês!'
+                : 'Sem lançamentos neste mês'
+            }
+          />
         )}
 
         {visibleSources.map((src) => {
@@ -252,17 +328,36 @@ export function NextBillsScreen() {
 
                 {expanded && (
                   <SourceExpandedContent>
-                    {displayedItems.map((item) => (
-                      <InstallmentRow key={`${item.expense_id}-${item.number}`}>
-                        <InstallmentDesc numberOfLines={1}>{item.description}</InstallmentDesc>
-                        <InstallmentValue>{formatCurrency(item.value)}</InstallmentValue>
-                        <StatusBadge paid={invoicePaid}>
-                          <PaidBadgeText paid={invoicePaid}>
-                            {invoicePaid ? '✓ Pago' : 'Pendente'}
-                          </PaidBadgeText>
-                        </StatusBadge>
-                      </InstallmentRow>
-                    ))}
+                    {displayedItems.map((item) => {
+                      const isInstallment = item.total > 1;
+                      const installmentLabel = isInstallment
+                        ? `Parcela ${item.number}/${item.total}`
+                        : item.payment_type === 'recorrente'
+                        ? 'Recorrente'
+                        : 'À vista';
+
+                      return (
+                        <InstallmentRow key={`${item.expense_id}-${item.number}`}>
+                          <InstallmentInfo>
+                            <InstallmentDesc numberOfLines={1}>{item.description}</InstallmentDesc>
+                            <InstallmentMetaRow>
+                              <InstallmentBadge>
+                                <InstallmentBadgeText>{installmentLabel}</InstallmentBadgeText>
+                              </InstallmentBadge>
+                              {item.category ? <CategoryBadge category={item.category} /> : null}
+                            </InstallmentMetaRow>
+                          </InstallmentInfo>
+                          <InstallmentRight>
+                            <InstallmentValue>{formatCurrency(item.value)}</InstallmentValue>
+                            <StatusBadge paid={invoicePaid}>
+                              <PaidBadgeText paid={invoicePaid}>
+                                {invoicePaid ? '✓ Pago' : 'Pendente'}
+                              </PaidBadgeText>
+                            </StatusBadge>
+                          </InstallmentRight>
+                        </InstallmentRow>
+                      );
+                    })}
                     {hasMore && (
                       <ShowMoreBtn onPress={() => toggleShowAll(src.id)}>
                         <ShowMoreBtnText>
@@ -294,7 +389,11 @@ export function NextBillsScreen() {
                 <SourceSummaryName>{src.name}</SourceSummaryName>
                 <SourceSummaryAmount>{formatCurrency(src.total)}</SourceSummaryAmount>
                 <SourceSummaryStatus paid={allPaid}>
-                  {allPaid ? '✓ Pago' : `${paidCount}/${src.installments.length} pagos`}
+                  {allPaid
+                    ? '✓ Pago'
+                    : statusFilter === 'unpaid'
+                    ? `${src.installments.length} ${src.installments.length === 1 ? 'pendente' : 'pendentes'}`
+                    : `${paidCount}/${src.installments.length} pagos`}
                 </SourceSummaryStatus>
                 <Ionicons
                   name={expanded ? 'chevron-up' : 'chevron-down'}
@@ -308,13 +407,30 @@ export function NextBillsScreen() {
                 <SourceExpandedContent>
                   {displayedItems.map((item) => {
                     const paid = isBillInstallmentPaid(item.expense_id, item.number);
+                    const isInstallment = item.total > 1;
+                    const installmentLabel = isInstallment
+                      ? `Parcela ${item.number}/${item.total}`
+                      : item.payment_type === 'recorrente'
+                      ? 'Recorrente'
+                      : 'À vista';
+
                     return (
                       <InstallmentRow key={`${item.expense_id}-${item.number}`}>
-                        <InstallmentDesc numberOfLines={1}>{item.description}</InstallmentDesc>
-                        <InstallmentValue>{formatCurrency(item.value)}</InstallmentValue>
-                        <PaidBadge paid={paid} onPress={() => handleToggleBillPaid(item)}>
-                          <PaidBadgeText paid={paid}>{paid ? '✓ Pago' : 'Pagar'}</PaidBadgeText>
-                        </PaidBadge>
+                        <InstallmentInfo>
+                          <InstallmentDesc numberOfLines={1}>{item.description}</InstallmentDesc>
+                          <InstallmentMetaRow>
+                            <InstallmentBadge>
+                              <InstallmentBadgeText>{installmentLabel}</InstallmentBadgeText>
+                            </InstallmentBadge>
+                            {item.category ? <CategoryBadge category={item.category} /> : null}
+                          </InstallmentMetaRow>
+                        </InstallmentInfo>
+                        <InstallmentRight>
+                          <InstallmentValue>{formatCurrency(item.value)}</InstallmentValue>
+                          <PaidBadge paid={paid} onPress={() => handleToggleBillPaid(item)}>
+                            <PaidBadgeText paid={paid}>{paid ? '✓ Pago' : 'Pagar'}</PaidBadgeText>
+                          </PaidBadge>
+                        </InstallmentRight>
                       </InstallmentRow>
                     );
                   })}
@@ -355,8 +471,8 @@ export function NextBillsScreen() {
           : null}
         monthKey={monthKey}
         onClose={() => setInvoiceCard(null)}
-        onCreate={createInvoicePayment}
-        onRemove={removeInvoicePayment}
+        onCreate={async (data) => { await createInvoicePayment(data); }}
+        onRemove={async (id) => { await removeInvoicePayment(id); }}
       />
     </Safe>
   );

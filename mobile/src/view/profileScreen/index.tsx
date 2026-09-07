@@ -1,13 +1,16 @@
 import { Ionicons } from '@expo/vector-icons';
 import { zodResolver } from '@hookform/resolvers/zod';
 import React, { useState } from 'react';
-import { Modal, View } from 'react-native';
+import { ActivityIndicator, Modal, ScrollView, Text, View } from 'react-native';
+import * as Updates from 'expo-updates';
+import Toast from 'react-native-toast-message';
 import { confirmModalGlobal as ConfirmModal } from '../../components/confirmModalGlobal';
 import { Controller, useForm } from 'react-hook-form';
 import { useTheme } from 'styled-components/native';
 import { z } from 'zod';
 import { buttonGlobal as ButtonGlobal } from '../../components/buttonGlobal';
 import { inputGlobal as InputGlobal } from '../../components/inputGlobal';
+import { FluidModalGlobal } from '../../components/fluidModalGlobal';
 import { useAuth } from '../../hooks/useAuth';
 import { useSharedAccesses } from '../../hooks/useSharedAccesses';
 import { useUsers } from '../../hooks/useUsers';
@@ -16,8 +19,8 @@ import { useProfile } from '../../providers/profileProvider';
 import {
   AccessCard, AccessEmail, AccessRow, ActionRow,
   Avatar, AvatarText, BackButton, Container, DangerItem, DangerLabel,
-  EmptyText, Header, RoleBadge, RoleText, Safe,
-  Section, SectionTitle, SmallButton, SmallButtonText,
+  EmptyText, Header, ItemLabel, RoleBadge, RoleText, Safe,
+  Section, SectionItem, SectionTitle, SmallButton, SmallButtonText,
   StatusBadge, StatusText, TabBar, TabButton, TabButtonText,
   TopBar, UserCard, UserCardEmail, UserCardName, UserEmail, UserName,
 } from './style';
@@ -48,6 +51,57 @@ export function ProfileScreen() {
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [revokeTarget, setRevokeTarget] = useState<{ id: string; email: string } | null>(null);
   const [removeTarget, setRemoveTarget] = useState<{ id: string; name: string } | null>(null);
+  const [checkingUpdate, setCheckingUpdate] = useState(false);
+
+  const handleLogout = async () => {
+    setShowLogoutConfirm(false);
+    closeProfile();
+    await logout();
+  };
+
+  const handleCheckUpdate = async () => {
+    if (!Updates.isEnabled) {
+      Toast.show({
+        type: 'info',
+        text1: 'OTA não ativo neste build',
+        text2: 'Gere um novo APK com "npm run build:apk" para ativar atualizações sem reinstalação.',
+        visibilityTime: 5000,
+      });
+      return;
+    }
+    setCheckingUpdate(true);
+    try {
+      const check = await Updates.checkForUpdateAsync();
+      if (check.isAvailable) {
+        Toast.show({
+          type: 'info',
+          text1: '⚡ Baixando atualização...',
+          text2: 'Aguarde um instante.',
+        });
+        await Updates.fetchUpdateAsync();
+        Toast.show({
+          type: 'success',
+          text1: '✅ Atualização concluída!',
+          text2: 'Reiniciando o aplicativo...',
+        });
+        setTimeout(() => Updates.reloadAsync(), 1500);
+      } else {
+        Toast.show({
+          type: 'success',
+          text1: 'Aplicativo atualizado!',
+          text2: 'Você já está com a versão mais recente.',
+        });
+      }
+    } catch (err: any) {
+      Toast.show({
+        type: 'error',
+        text1: 'Erro ao verificar atualizações',
+        text2: err?.message || 'Tente novamente mais tarde.',
+      });
+    } finally {
+      setCheckingUpdate(false);
+    }
+  };
 
   const inviteForm = useForm<IInviteForm>({ resolver: zodResolver(inviteSchema) });
 
@@ -107,12 +161,56 @@ export function ProfileScreen() {
         </TabBar>
 
         {activeTab === 'profile' && (
-          <Section>
-            <DangerItem onPress={() => setShowLogoutConfirm(true)}>
-              <Ionicons name="log-out-outline" size={20} color={theme.colors.error} />
-              <DangerLabel>Sair da conta</DangerLabel>
-            </DangerItem>
-          </Section>
+          <>
+            <Section>
+              <SectionTitle>Atualizações do Aplicativo</SectionTitle>
+              <View style={{ padding: 16 }}>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 }}>
+                  <Text style={{ color: theme.colors.textSecondary, fontSize: 13 }}>Versão Base</Text>
+                  <Text style={{ color: theme.colors.text, fontSize: 13, fontWeight: '600' }}>1.0.0</Text>
+                </View>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 }}>
+                  <Text style={{ color: theme.colors.textSecondary, fontSize: 13 }}>Status OTA</Text>
+                  <Text style={{ color: Updates.isEnabled ? theme.colors.primary : theme.colors.warning, fontSize: 13, fontWeight: '600' }}>
+                    {Updates.isEnabled
+                      ? (Updates.isEmbeddedLaunch ? 'Versão base (aguardando OTA)' : 'Atualizado via nuvem')
+                      : 'Não habilitado neste APK'}
+                  </Text>
+                </View>
+                {Updates.channel && (
+                  <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 }}>
+                    <Text style={{ color: theme.colors.textSecondary, fontSize: 13 }}>Canal</Text>
+                    <Text style={{ color: theme.colors.text, fontSize: 13, fontWeight: '600' }}>{Updates.channel}</Text>
+                  </View>
+                )}
+                {Updates.updateId && (
+                  <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                    <Text style={{ color: theme.colors.textSecondary, fontSize: 13 }}>Pacote Ativo</Text>
+                    <Text style={{ color: theme.colors.textSecondary, fontSize: 12 }}>
+                      {Updates.updateId.slice(0, 8)}...
+                    </Text>
+                  </View>
+                )}
+              </View>
+              <SectionItem onPress={handleCheckUpdate} disabled={checkingUpdate}>
+                {checkingUpdate ? (
+                  <ActivityIndicator size="small" color={theme.colors.primary} />
+                ) : (
+                  <Ionicons name="cloud-download-outline" size={20} color={theme.colors.primary} />
+                )}
+                <ItemLabel style={{ color: theme.colors.primary }}>
+                  {checkingUpdate ? 'Verificando atualizações...' : 'Verificar atualizações agora'}
+                </ItemLabel>
+              </SectionItem>
+            </Section>
+
+            <Section>
+              <DangerItem onPress={() => setShowLogoutConfirm(true)}>
+                <Ionicons name="log-out-outline" size={20} color={theme.colors.error} />
+                <DangerLabel>Sair da conta</DangerLabel>
+              </DangerItem>
+            </Section>
+          </>
         )}
 
         {activeTab === 'accesses' && (
@@ -220,7 +318,7 @@ export function ProfileScreen() {
         title="Sair da conta"
         message="Deseja realmente sair?"
         confirmLabel="Sair"
-        onConfirm={logout}
+        onConfirm={handleLogout}
         onCancel={() => setShowLogoutConfirm(false)}
       />
 
@@ -240,32 +338,33 @@ export function ProfileScreen() {
         onCancel={() => setRemoveTarget(null)}
       />
 
-      <Modal visible={showInviteModal} transparent animationType="slide" onRequestClose={() => setShowInviteModal(false)}>
-        <ModalOverlay>
-          <ModalCard>
-            <ModalContent>
-              <TitleRow>
-                <ModalTitle>Convidar usuário</ModalTitle>
-                <CloseButton onPress={() => setShowInviteModal(false)}>
-                  <Ionicons name="close-circle" size={28} color={theme.colors.error} />
-                </CloseButton>
-              </TitleRow>
-              <Controller control={inviteForm.control} name="email" render={({ field }) => (
-                <InputGlobal
-                  label="E-mail"
-                  placeholder="usuario@email.com"
-                  keyboardType="email-address"
-                  autoCapitalize="none"
-                  value={field.value}
-                  onChangeText={field.onChange}
-                  error={inviteForm.formState.errors.email?.message}
-                />
-              )} />
-              <ButtonGlobal label="Enviar convite" onPress={inviteForm.handleSubmit(handleInvite)} loading={isSubmitting} />
-            </ModalContent>
-          </ModalCard>
-        </ModalOverlay>
-      </Modal>
+      <FluidModalGlobal
+        visible={showInviteModal}
+        onClose={() => setShowInviteModal(false)}
+        title="Convidar usuário"
+        subtitle="Compartilhe o acesso às despesas da casa"
+      >
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+          contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 28 }}
+        >
+          <Controller control={inviteForm.control} name="email" render={({ field }) => (
+            <InputGlobal
+              label="E-mail"
+              placeholder="usuario@email.com"
+              keyboardType="email-address"
+              autoCapitalize="none"
+              value={field.value}
+              onChangeText={field.onChange}
+              error={inviteForm.formState.errors.email?.message}
+            />
+          )} />
+          <View style={{ marginTop: 12 }}>
+            <ButtonGlobal label="Enviar convite" onPress={inviteForm.handleSubmit(handleInvite)} loading={isSubmitting} />
+          </View>
+        </ScrollView>
+      </FluidModalGlobal>
     </Safe>
   );
 }

@@ -39,56 +39,35 @@ export const SummaryBar = styled.View`
   gap: ${({ theme }) => theme.spacing.sm}px;
 `;
 
-export const SummaryChip = styled.View<{ color?: string }>`
+export const SummaryChip = styled.TouchableOpacity<{
+  active?: boolean;
+  activeColor?: string;
+  bgColor?: string;
+}>`
   flex: 1;
-  background-color: ${({ theme, color }) => (color ?? theme.colors.surface)};
+  background-color: ${({ theme, active, bgColor }) =>
+    active ? (bgColor ?? theme.colors.primary + '22') : theme.colors.surface};
   border-radius: ${({ theme }) => theme.borderRadius.md}px;
   padding: ${({ theme }) => theme.spacing.sm}px;
   align-items: center;
+  border-width: 1.5px;
+  border-color: ${({ theme, active, activeColor }) =>
+    active ? (activeColor ?? theme.colors.primary) : 'transparent'};
 `;
 
-export const SummaryChipLabel = styled.Text`
+export const SummaryChipLabel = styled.Text<{ active?: boolean; activeColor?: string }>`
   font-size: ${({ theme }) => theme.typography.caption}px;
-  color: ${({ theme }) => theme.colors.textSecondary};
+  color: ${({ theme, active, activeColor }) =>
+    active ? (activeColor ?? theme.colors.primary) : theme.colors.textSecondary};
+  font-weight: ${({ active }) => (active ? '700' : '500')};
+  margin-bottom: 2px;
 `;
 
-export const SummaryChipValue = styled.Text`
+export const SummaryChipValue = styled.Text<{ active?: boolean; activeColor?: string }>`
   font-size: ${({ theme }) => theme.typography.body}px;
-  color: ${({ theme }) => theme.colors.text};
+  color: ${({ theme, active, activeColor }) =>
+    active ? (activeColor ?? theme.colors.primary) : theme.colors.text};
   font-weight: 700;
-`;
-
-export const FilterBar = styled.ScrollView`
-  padding: 0 ${({ theme }) => theme.spacing.lg}px;
-  margin-bottom: ${({ theme }) => theme.spacing.sm}px;
-`;
-
-export const FilterChip = styled.TouchableOpacity<{ active: boolean }>`
-  padding: ${({ theme }) => theme.spacing.xs}px ${({ theme }) => theme.spacing.sm}px;
-  border-radius: ${({ theme }) => theme.borderRadius.full}px;
-  border-width: 1px;
-  border-color: ${({ theme, active }) => (active ? theme.colors.primary : theme.colors.border)};
-  background-color: ${({ theme, active }) => (active ? theme.colors.primary + '22' : theme.colors.card)};
-  margin-right: ${({ theme }) => theme.spacing.xs}px;
-`;
-
-export const FilterChipText = styled.Text<{ active: boolean }>`
-  font-size: ${({ theme }) => theme.typography.caption}px;
-  color: ${({ theme, active }) => (active ? theme.colors.primary : theme.colors.textSecondary)};
-  font-weight: 600;
-`;
-
-export const ToggleRow = styled.TouchableOpacity<{ active: boolean }>`
-  flex-direction: row;
-  align-items: center;
-  margin: 0 ${({ theme }) => theme.spacing.lg}px ${({ theme }) => theme.spacing.sm}px;
-  gap: ${({ theme }) => theme.spacing.xs}px;
-`;
-
-export const ToggleText = styled.Text<{ active: boolean }>`
-  font-size: ${({ theme }) => theme.typography.caption}px;
-  color: ${({ theme, active }) => (active ? theme.colors.primary : theme.colors.textSecondary)};
-  font-weight: 600;
 `;
 
 export const SourceSummaryCard = styled.View`
@@ -205,22 +184,54 @@ export const SourceExpandedContent = styled.View`
 export const InstallmentRow = styled.View`
   flex-direction: row;
   align-items: center;
-  padding: ${({ theme }) => theme.spacing.xs}px 0;
+  justify-content: space-between;
+  padding: 10px 0;
   border-bottom-width: 1px;
   border-bottom-color: ${({ theme }) => theme.colors.border}44;
 `;
 
-export const InstallmentDesc = styled.Text`
+export const InstallmentInfo = styled.View`
   flex: 1;
-  font-size: ${({ theme }) => theme.typography.caption}px;
+  margin-right: ${({ theme }) => theme.spacing.sm}px;
+`;
+
+export const InstallmentDesc = styled.Text`
+  font-size: ${({ theme }) => theme.typography.body}px;
   color: ${({ theme }) => theme.colors.text};
+  font-weight: 600;
+`;
+
+export const InstallmentMetaRow = styled.View`
+  flex-direction: row;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 4px;
+`;
+
+export const InstallmentBadge = styled.View`
+  background-color: ${({ theme }) => theme.colors.background};
+  border-width: 1px;
+  border-color: ${({ theme }) => theme.colors.border};
+  border-radius: 4px;
+  padding: 2px 6px;
+`;
+
+export const InstallmentBadgeText = styled.Text`
+  font-size: 11px;
+  color: ${({ theme }) => theme.colors.textSecondary};
+  font-weight: 600;
+`;
+
+export const InstallmentRight = styled.View`
+  align-items: flex-end;
+  gap: 4px;
 `;
 
 export const InstallmentValue = styled.Text`
-  font-size: ${({ theme }) => theme.typography.caption}px;
+  font-size: ${({ theme }) => theme.typography.body}px;
   color: ${({ theme }) => theme.colors.text};
-  font-weight: 600;
-  margin-right: ${({ theme }) => theme.spacing.sm}px;
+  font-weight: 700;
 `;
 
 export const ShowMoreBtn = styled.TouchableOpacity`

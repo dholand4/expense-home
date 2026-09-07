@@ -68,6 +68,8 @@ export const TotalCard = styled.View`
   border-color: ${({ theme }) => theme.colors.border};
   padding: ${({ theme }) => theme.spacing.lg}px;
   margin-bottom: ${({ theme }) => theme.spacing.lg}px;
+  align-items: center;
+  justify-content: center;
 `;
 
 export const TotalLabel = styled.Text`
@@ -77,6 +79,7 @@ export const TotalLabel = styled.Text`
   letter-spacing: 1px;
   text-transform: uppercase;
   margin-bottom: ${({ theme }) => theme.spacing.sm}px;
+  text-align: center;
 `;
 
 export const TotalValue = styled.Text`
@@ -84,11 +87,13 @@ export const TotalValue = styled.Text`
   color: ${({ theme }) => theme.colors.text};
   font-weight: 800;
   margin-bottom: ${({ theme }) => theme.spacing.xs}px;
+  text-align: center;
 `;
 
 export const TrendRow = styled.View`
   flex-direction: row;
   align-items: center;
+  justify-content: center;
   gap: 4px;
 `;
 
@@ -96,6 +101,7 @@ export const TrendText = styled.Text<{ positive: boolean }>`
   font-size: ${({ theme }) => theme.typography.caption}px;
   color: ${({ positive, theme }) => positive ? theme.colors.success : theme.colors.error};
   font-weight: 500;
+  text-align: center;
 `;
 
 export const SectionRow = styled.View`
@@ -208,4 +214,98 @@ export const SourceAmount = styled.Text`
   font-size: ${({ theme }) => theme.typography.body}px;
   color: ${({ theme }) => theme.colors.primary};
   font-weight: 600;
+`;
+
+export const ExpensesSection = styled.View`
+  margin-bottom: ${({ theme }) => theme.spacing.lg}px;
+`;
+
+export const ExpenseItemCard = styled.TouchableOpacity`
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  background-color: ${({ theme }) => theme.colors.card};
+  border-radius: ${({ theme }) => theme.borderRadius.md}px;
+  padding: ${({ theme }) => theme.spacing.md}px;
+  margin-bottom: ${({ theme }) => theme.spacing.xs}px;
+  border-width: 1px;
+  border-color: ${({ theme }) => theme.colors.border};
+`;
+
+export const ExpenseCategoryIndicator = styled.View<{ color: string }>`
+  width: 4px;
+  height: 36px;
+  border-radius: 2px;
+  background-color: ${({ color }) => color};
+  margin-right: ${({ theme }) => theme.spacing.md}px;
+`;
+
+export const ExpenseItemInfo = styled.View`
+  flex: 1;
+  margin-right: ${({ theme }) => theme.spacing.sm}px;
+`;
+
+export const ExpenseItemTitle = styled.Text`
+  font-size: ${({ theme }) => theme.typography.body}px;
+  color: ${({ theme }) => theme.colors.text};
+  font-weight: 600;
+  margin-bottom: 3px;
+`;
+
+export const ExpenseItemMeta = styled.View`
+  flex-direction: row;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+`;
+
+export const ExpenseMetaBadge = styled.View`
+  background-color: ${({ theme }) => theme.colors.surface};
+  padding: 2px 6px;
+  border-radius: 4px;
+`;
+
+export const ExpenseMetaText = styled.Text`
+  font-size: 11px;
+  color: ${({ theme }) => theme.colors.textSecondary};
+  font-weight: 500;
+`;
+
+export const ExpenseItemAmount = styled.Text`
+  font-size: ${({ theme }) => theme.typography.body}px;
+  color: ${({ theme }) => theme.colors.text};
+  font-weight: 700;
+`;
+
+export const EmptyExpensesCard = styled.View`
+  background-color: ${({ theme }) => theme.colors.card};
+  border-radius: ${({ theme }) => theme.borderRadius.md}px;
+  padding: ${({ theme }) => theme.spacing.lg}px;
+  align-items: center;
+  justify-content: center;
+  border-width: 1px;
+  border-color: ${({ theme }) => theme.colors.border};
+`;
+
+export const EmptyExpensesText = styled.Text`
+  font-size: ${({ theme }) => theme.typography.caption}px;
+  color: ${({ theme }) => theme.colors.textSecondary};
+  margin-top: ${({ theme }) => theme.spacing.xs}px;
+`;
+
+export const FAB = styled.TouchableOpacity`
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
+  width: 56px;
+  height: 56px;
+  border-radius: 28px;
+  background-color: ${({ theme }) => theme.colors.primary};
+  align-items: center;
+  justify-content: center;
+  elevation: 6;
+  shadow-color: #000;
+  shadow-offset: 0px 3px;
+  shadow-opacity: 0.3;
+  shadow-radius: 4px;
 `;

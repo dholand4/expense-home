@@ -13,7 +13,7 @@ import { useBillAccounts } from '../../hooks/useBillAccounts';
 import { useExpenses } from '../../hooks/useExpenses';
 import { useInstallmentPayments } from '../../hooks/useInstallmentPayments';
 import { useCardInvoicePayments } from '../../hooks/useCardInvoicePayments';
-import { CATEGORY_LIST, formatCurrency, getInstallments, getMonthKey } from '../../utils/finance';
+import { CATEGORIES, CATEGORY_LIST, formatCurrency, getInstallments, getMonthKey } from '../../utils/finance';
 import { format, subMonths, addMonths } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import {
@@ -177,7 +177,15 @@ const PaidBadgeText = styled.Text`
 /* ─── Quick month options ─── */
 type QuickMonth = 'all' | 'current' | 'prev';
 
-export function ExpensesScreen() {
+export function ExpensesScreen({
+  hideHeader = false,
+  onClose,
+  initialCategory,
+}: {
+  hideHeader?: boolean;
+  onClose?: () => void;
+  initialCategory?: string | null;
+} = {}) {
   const theme = useTheme();
   const { expenses, isLoading, createExpense, updateExpense, removeExpense } = useExpenses();
   const { cards } = useCards();
@@ -189,9 +197,18 @@ export function ExpensesScreen() {
   const [monthOffset, setMonthOffset] = useState<number | null>(null); // null = todos
   const [quickMonth, setQuickMonth] = useState<QuickMonth>('all');
   const [sourceFilter, setSourceFilter] = useState<string | null>(null);
-  const [categoryFilter, setCategoryFilter] = useState<string | null>(null);
+  const [categoryFilter, setCategoryFilter] = useState<string | null>(initialCategory ?? null);
   const [page, setPage] = useState(0);
-  const [panelOpen, setPanelOpen] = useState(false);
+  const [panelOpen, setPanelOpen] = useState(Boolean(initialCategory));
+
+  React.useEffect(() => {
+    if (initialCategory !== undefined) {
+      setCategoryFilter(initialCategory);
+      if (initialCategory) {
+        setPanelOpen(true);
+      }
+    }
+  }, [initialCategory]);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedExpense, setSelectedExpense] = useState<IExpense | null>(null);
@@ -294,11 +311,22 @@ export function ExpensesScreen() {
     setPage(0);
   };
 
+  const ContainerComponent = hideHeader ? View : Safe;
+
   return (
-    <Safe>
-      <Header>
-        <Title>Lançamentos</Title>
-      </Header>
+    <ContainerComponent style={hideHeader ? { flex: 1, backgroundColor: theme.colors.background } : undefined}>
+      {!hideHeader && (
+        <Header>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+            {onClose && (
+              <TouchableOpacity onPress={onClose} activeOpacity={0.7} style={{ padding: 4 }}>
+                <Ionicons name="arrow-back" size={24} color={theme.colors.text} />
+              </TouchableOpacity>
+            )}
+            <Title>{onClose ? 'Todos os Lançamentos' : 'Lançamentos'}</Title>
+          </View>
+        </Header>
+      )}
 
       <SearchBar
         placeholder="Buscar lançamento..."
@@ -382,7 +410,7 @@ export function ExpensesScreen() {
               </Chip>
               {CATEGORY_LIST.map(cat => (
                 <Chip key={cat} active={categoryFilter === cat} onPress={() => { setCategoryFilter(categoryFilter === cat ? null : cat); setPage(0); }}>
-                  <ChipText active={categoryFilter === cat}>{cat}</ChipText>
+                  <ChipText active={categoryFilter === cat}>{CATEGORIES[cat]?.label ?? cat}</ChipText>
                 </Chip>
               ))}
             </ChipRow>
@@ -485,6 +513,6 @@ export function ExpensesScreen() {
         onCancel={() => setConfirmTarget(null)}
         loading={isDeleting}
       />
-    </Safe>
+      </ContainerComponent>
   );
 }
