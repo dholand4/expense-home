@@ -1,11 +1,12 @@
 import { Ionicons } from '@expo/vector-icons';
 import { zodResolver } from '@hookform/resolvers/zod';
-import React, { useState } from 'react';
-import { Image, KeyboardAvoidingView, Platform } from 'react-native';
+import React, { useRef, useState } from 'react';
+import { Image } from 'react-native';
 import { Controller, useForm } from 'react-hook-form';
 import { useTheme } from 'styled-components/native';
 import { z } from 'zod';
 import { buttonGlobal as ButtonGlobal } from '../../components/buttonGlobal';
+import { KeyboardSafeScreen } from '../../components/keyboardSafeScreen';
 import { useAuth } from '../../hooks/useAuth';
 import {
   ActionsArea, AppName, Divider, DividerLine, DividerText,
@@ -21,17 +22,24 @@ const schema = z.object({
 
 type IFormData = z.infer<typeof schema>;
 
+import { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { AuthStackParamList } from '../../routes/types';
+
 interface IProps {
-  onGoToRegister: () => void;
-  onGoToForgotPassword: () => void;
+  navigation?: NativeStackScreenProps<AuthStackParamList, 'LoginScreen'>['navigation'];
+  onGoToRegister?: () => void;
+  onGoToForgotPassword?: () => void;
 }
 
-export function LoginScreen({ onGoToRegister, onGoToForgotPassword }: IProps) {
+export function LoginScreen({ navigation, onGoToRegister, onGoToForgotPassword }: IProps) {
+  const handleGoToRegister = onGoToRegister ?? (() => navigation?.navigate('RegisterScreen'));
+  const handleGoToForgotPassword = onGoToForgotPassword ?? (() => navigation?.navigate('ForgotPasswordScreen'));
   const theme = useTheme();
   const { login } = useAuth();
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const scrollRef = useRef<any>(null);
 
   const { control, handleSubmit, formState: { errors } } = useForm<IFormData>({
     resolver: zodResolver(schema),
@@ -52,8 +60,8 @@ export function LoginScreen({ onGoToRegister, onGoToForgotPassword }: IProps) {
 
   return (
     <Safe>
-      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
-        <Scroll>
+      <KeyboardSafeScreen>
+        <Scroll ref={scrollRef}>
 
           <LogoArea>
             <LogoBadge>
@@ -117,7 +125,7 @@ export function LoginScreen({ onGoToRegister, onGoToForgotPassword }: IProps) {
             )}
           />
 
-          <ForgotLink onPress={onGoToForgotPassword} activeOpacity={0.7}>
+          <ForgotLink onPress={handleGoToForgotPassword} activeOpacity={0.7}>
             <ForgotLinkText>Esqueci minha senha</ForgotLinkText>
           </ForgotLink>
 
@@ -126,11 +134,11 @@ export function LoginScreen({ onGoToRegister, onGoToForgotPassword }: IProps) {
             <Divider>
               <DividerLine /><DividerText>ou</DividerText><DividerLine />
             </Divider>
-            <ButtonGlobal label="Criar conta" variant="outline" onPress={onGoToRegister} />
+            <ButtonGlobal label="Criar conta" variant="outline" onPress={handleGoToRegister} />
           </ActionsArea>
 
         </Scroll>
-      </KeyboardAvoidingView>
+      </KeyboardSafeScreen>
     </Safe>
   );
 }

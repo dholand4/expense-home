@@ -25,7 +25,8 @@ const linking: LinkingOptions<AuthStackParamList> = {
   prefixes: ['dqfinancas://'],
   config: {
     screens: {
-      LoginRegisterFlow: '',
+      LoginScreen: '',
+      RegisterScreen: 'register',
       AcceptInviteScreen: {
         path: 'accept-invite',
         parse: { token: (token: string) => token },

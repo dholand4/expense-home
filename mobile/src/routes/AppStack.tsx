@@ -6,7 +6,6 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ProfileProvider, useProfile } from '../providers/profileProvider';
 import { theme } from '../constants/theme';
 import { DashboardScreen } from '../view/dashboardScreen';
-import { ExpensesScreen } from '../view/expensesScreen';
 import { NextBillsScreen } from '../view/nextBillsScreen';
 import { ProfileScreen } from '../view/profileScreen';
 import { RunningDebtsScreen } from '../view/runningDebtsScreen';
@@ -20,7 +19,6 @@ type IoniconsName = React.ComponentProps<typeof Ionicons>['name'];
 const TAB_ICONS: Record<keyof AppTabParamList, { focused: IoniconsName; outline: IoniconsName }> = {
   DashboardScreen: { focused: 'home', outline: 'home-outline' },
   SourcesScreen: { focused: 'card', outline: 'card-outline' },
-  ExpensesScreen: { focused: 'add-circle', outline: 'add-circle-outline' },
   NextBillsScreen: { focused: 'calendar', outline: 'calendar-outline' },
   DebtsScreen: { focused: 'receipt', outline: 'receipt-outline' },
 };
@@ -28,7 +26,6 @@ const TAB_ICONS: Record<keyof AppTabParamList, { focused: IoniconsName; outline:
 const TAB_LABELS: Record<keyof AppTabParamList, string> = {
   DashboardScreen: 'Início',
   SourcesScreen: 'Fontes',
-  ExpensesScreen: 'Lançamentos',
   NextBillsScreen: 'Faturas',
   DebtsScreen: 'Fiados',
 };
@@ -68,12 +65,11 @@ function Tabs() {
       tabBar={(props) => <CustomTabBar {...props} />}
       tabBarPosition="bottom"
       initialRouteName="DashboardScreen"
-      sceneContainerStyle={{ backgroundColor: theme.colors.background }}
+      style={{ backgroundColor: theme.colors.background }}
       screenOptions={{ swipeEnabled: true, tabBarIndicatorStyle: { height: 0 } }}
     >
       <Tab.Screen name="DashboardScreen" component={DashboardScreen} />
       <Tab.Screen name="SourcesScreen" component={SourcesScreen} />
-      <Tab.Screen name="ExpensesScreen" component={ExpensesScreen} />
       <Tab.Screen name="NextBillsScreen" component={NextBillsScreen} />
       <Tab.Screen name="DebtsScreen" component={RunningDebtsScreen} />
     </Tab.Navigator>

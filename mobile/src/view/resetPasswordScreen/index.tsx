@@ -1,12 +1,13 @@
 import { Ionicons } from '@expo/vector-icons';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import React, { useState } from 'react';
-import { Image, KeyboardAvoidingView, Platform } from 'react-native';
+import React, { useRef, useState } from 'react';
+import { Image } from 'react-native';
 import { Controller, useForm } from 'react-hook-form';
 import { useTheme } from 'styled-components/native';
 import { z } from 'zod';
 import { buttonGlobal as ButtonGlobal } from '../../components/buttonGlobal';
+import { KeyboardSafeScreen } from '../../components/keyboardSafeScreen';
 import { authService } from '../../services/authService';
 import { AuthStackParamList } from '../../routes/types';
 import {
@@ -34,6 +35,7 @@ export function ResetPasswordScreen({ route, navigation }: Props) {
   const [done, setDone] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
+  const scrollRef = useRef<any>(null);
 
   const { control, handleSubmit, formState: { errors } } = useForm<IFormData>({
     resolver: zodResolver(schema),
@@ -55,8 +57,8 @@ export function ResetPasswordScreen({ route, navigation }: Props) {
 
   return (
     <Safe>
-      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
-        <Scroll>
+      <KeyboardSafeScreen>
+        <Scroll ref={scrollRef}>
           <LogoArea>
             <LogoBadge>
               <Image source={require('../../assets/LOGODQ.png')} style={{ width: 72, height: 72, borderRadius: 18 }} />
@@ -163,12 +165,12 @@ export function ResetPasswordScreen({ route, navigation }: Props) {
             </>
           )}
 
-          <BackLink onPress={() => navigation.navigate('LoginRegisterFlow')}>
+          <BackLink onPress={() => navigation.navigate('LoginScreen')}>
             <Ionicons name="arrow-back-outline" size={16} color={theme.colors.primary} />
             <BackLinkText>Voltar para o login</BackLinkText>
           </BackLink>
         </Scroll>
-      </KeyboardAvoidingView>
+      </KeyboardSafeScreen>
     </Safe>
   );
 }

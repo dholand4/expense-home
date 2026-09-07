@@ -2,7 +2,11 @@ export { ScreenSafe as Safe } from '../../components/screenSafe';
 import styled from 'styled-components/native';
 
 export const Scroll = styled.ScrollView.attrs({
-  contentContainerStyle: { flexGrow: 1, justifyContent: 'center' },
+  contentContainerStyle: {
+    flexGrow: 1,
+    paddingTop: 16,
+    paddingBottom: 180,
+  },
   keyboardShouldPersistTaps: 'handled',
   showsVerticalScrollIndicator: false,
 })`
@@ -116,4 +120,25 @@ export const ForgotLinkText = styled.Text`
   font-size: ${({ theme }) => theme.typography.caption}px;
   color: ${({ theme }) => theme.colors.primary};
   font-weight: 500;
+`;
+
+export const Container = styled.View`
+  flex: 1;
+  padding: ${({ theme }) => theme.spacing.lg}px;
+  justify-content: center;
+`;
+
+export const FormCard = styled.View`
+  background-color: ${({ theme }) => theme.colors.surface};
+  border-radius: ${({ theme }) => theme.borderRadius.lg}px;
+  padding: ${({ theme }) => theme.spacing.lg}px;
+  border-width: 1px;
+  border-color: ${({ theme }) => theme.colors.border};
+`;
+
+export const FormTitle = styled.Text`
+  font-size: ${({ theme }) => theme.typography.h3}px;
+  color: ${({ theme }) => theme.colors.text};
+  font-weight: 700;
+  margin-bottom: ${({ theme }) => theme.spacing.md}px;
 `;

@@ -1,11 +1,12 @@
 import { Ionicons } from '@expo/vector-icons';
 import { zodResolver } from '@hookform/resolvers/zod';
-import React, { useState } from 'react';
-import { Image, KeyboardAvoidingView, Platform } from 'react-native';
+import React, { useRef, useState } from 'react';
+import { Image, ScrollView } from 'react-native';
 import { Controller, useForm } from 'react-hook-form';
 import { useTheme } from 'styled-components/native';
 import { z } from 'zod';
 import { buttonGlobal as ButtonGlobal } from '../../components/buttonGlobal';
+import { KeyboardSafeScreen } from '../../components/keyboardSafeScreen';
 import { useAuth } from '../../hooks/useAuth';
 import {
   ActionsArea, AppName, Divider, DividerLine, DividerText,
@@ -23,15 +24,31 @@ const schema = z.object({
   path: ['confirm'],
 });
 
+import { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { AuthStackParamList } from '../../routes/types';
+
 type IFormData = z.infer<typeof schema>;
 
-export function RegisterScreen({ onGoToLogin }: { onGoToLogin: () => void }) {
+interface IProps {
+  navigation?: NativeStackScreenProps<AuthStackParamList, 'RegisterScreen'>['navigation'];
+  onGoToLogin?: () => void;
+}
+
+export function RegisterScreen({ navigation, onGoToLogin }: IProps) {
+  const handleGoToLogin = onGoToLogin ?? (() => {
+    if (navigation?.canGoBack()) {
+      navigation.goBack();
+    } else {
+      navigation?.navigate('LoginScreen');
+    }
+  });
   const theme = useTheme();
   const { register } = useAuth();
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
+  const scrollRef = useRef<any>(null);
 
   const { control, handleSubmit, formState: { errors } } = useForm<IFormData>({
     resolver: zodResolver(schema),
@@ -52,15 +69,15 @@ export function RegisterScreen({ onGoToLogin }: { onGoToLogin: () => void }) {
 
   return (
     <Safe>
-      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
-        <Scroll>
+      <KeyboardSafeScreen>
+        <Scroll ref={scrollRef}>
 
-          <LogoArea>
-            <LogoBadge>
-              <Image source={require('../../assets/LOGODQ.png')} style={{ width: 72, height: 72, borderRadius: 18 }} />
+          <LogoArea style={{ marginBottom: 12 }}>
+            <LogoBadge style={{ width: 48, height: 48, marginBottom: 6 }}>
+              <Image source={require('../../assets/LOGODQ.png')} style={{ width: 48, height: 48, borderRadius: 12 }} />
             </LogoBadge>
-            <AppName>DQ Finanças</AppName>
-            <Tagline>Crie sua conta gratuitamente</Tagline>
+            <AppName style={{ fontSize: 22 }}>DQ Finanças</AppName>
+            <Tagline style={{ fontSize: 13, marginTop: 2 }}>Crie sua conta gratuitamente</Tagline>
           </LogoArea>
 
           {error ? <ErrorBox><ErrorMessage>{error}</ErrorMessage></ErrorBox> : null}
@@ -172,11 +189,11 @@ export function RegisterScreen({ onGoToLogin }: { onGoToLogin: () => void }) {
             <Divider>
               <DividerLine /><DividerText>ou</DividerText><DividerLine />
             </Divider>
-            <ButtonGlobal label="Já tenho conta" variant="outline" onPress={onGoToLogin} />
+            <ButtonGlobal label="Já tenho conta" variant="outline" onPress={handleGoToLogin} />
           </ActionsArea>
 
         </Scroll>
-      </KeyboardAvoidingView>
+      </KeyboardSafeScreen>
     </Safe>
   );
 }

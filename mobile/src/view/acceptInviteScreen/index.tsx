@@ -1,6 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useState } from 'react';
+import { KeyboardAvoidingView, Platform } from 'react-native';
 import { Controller, useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { buttonGlobal as ButtonGlobal } from '../../components/buttonGlobal';
@@ -16,6 +17,7 @@ import {
   FormCard,
   FormTitle,
   Safe,
+  Scroll,
   Tagline,
 } from '../loginScreen/style';
 
@@ -65,33 +67,35 @@ export function AcceptInviteScreen({ route }: Props) {
 
   return (
     <Safe>
-      <Container>
-        <AppName>DQ Finanças</AppName>
-        <Tagline>Defina sua senha para ativar a conta</Tagline>
-        <FormCard style={{ marginTop: 24 }}>
-          <FormTitle>Aceitar convite</FormTitle>
-          {error ? (
-            <ErrorBox>
-              <ErrorMessage>{error}</ErrorMessage>
-            </ErrorBox>
-          ) : null}
-          <Controller
-            control={control}
-            name="password"
-            render={({ field }) => (
-              <InputGlobal
-                label="Nova senha"
-                placeholder="••••••"
-                secureTextEntry
-                value={field.value}
-                onChangeText={field.onChange}
-                error={errors.password?.message}
-              />
-            )}
-          />
-          <ButtonGlobal label="Ativar conta" onPress={handleSubmit(onSubmit)} loading={loading} />
-        </FormCard>
-      </Container>
+      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+        <Scroll>
+          <AppName style={{ textAlign: 'center', marginTop: 24 }}>DQ Finanças</AppName>
+          <Tagline>Defina sua senha para ativar a conta</Tagline>
+          <FormCard style={{ marginTop: 24 }}>
+            <FormTitle>Aceitar convite</FormTitle>
+            {error ? (
+              <ErrorBox>
+                <ErrorMessage>{error}</ErrorMessage>
+              </ErrorBox>
+            ) : null}
+            <Controller
+              control={control}
+              name="password"
+              render={({ field }) => (
+                <InputGlobal
+                  label="Nova senha"
+                  placeholder="••••••"
+                  secureTextEntry
+                  value={field.value}
+                  onChangeText={field.onChange}
+                  error={errors.password?.message}
+                />
+              )}
+            />
+            <ButtonGlobal label="Ativar conta" onPress={handleSubmit(onSubmit)} loading={loading} />
+          </FormCard>
+        </Scroll>
+      </KeyboardAvoidingView>
     </Safe>
   );
 }

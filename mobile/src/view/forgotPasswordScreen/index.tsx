@@ -7,6 +7,7 @@ import { Controller, useForm } from 'react-hook-form';
 import { useTheme } from 'styled-components/native';
 import { z } from 'zod';
 import { buttonGlobal as ButtonGlobal } from '../../components/buttonGlobal';
+import { KeyboardSafeScreen } from '../../components/keyboardSafeScreen';
 import { authService } from '../../services/authService';
 import { AuthStackParamList } from '../../routes/types';
 import {
@@ -46,7 +47,7 @@ export function ForgotPasswordScreen({ navigation }: Props) {
 
   return (
     <Safe>
-      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+      <KeyboardSafeScreen>
         <Scroll>
           <LogoArea>
             <LogoBadge>
@@ -89,7 +90,7 @@ export function ForgotPasswordScreen({ navigation }: Props) {
             <BackLinkText>Voltar para o login</BackLinkText>
           </BackLink>
         </Scroll>
-      </KeyboardAvoidingView>
+      </KeyboardSafeScreen>
     </Safe>
   );
 }
