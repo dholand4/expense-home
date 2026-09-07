@@ -411,7 +411,36 @@ export async function handleSupabaseRequest<T>(method: string, path: string, bod
     }
   }
 
-  // 9. /users
+  // 9. /incomes
+  if (segments[0] === 'incomes') {
+    const id = segments[1];
+    if (method === 'GET' && !id) {
+      const { data, error } = await supabase.from('incomes').select('*').order('created_at', { ascending: false });
+      if (error) throw new Error(error.message);
+      return (data || []).map(formatSupabaseRecord) as unknown as T;
+    }
+    if (method === 'POST') {
+      const { data: { user } } = await supabase.auth.getUser();
+      const { data, error } = await supabase.from('incomes').insert({
+        ...body,
+        created_by: user?.id,
+      }).select('*').single();
+      if (error) throw new Error(error.message);
+      return formatSupabaseRecord(data) as unknown as T;
+    }
+    if (method === 'PATCH' && id) {
+      const { data, error } = await supabase.from('incomes').update(body).eq('id', id).select('*').single();
+      if (error) throw new Error(error.message);
+      return formatSupabaseRecord(data) as unknown as T;
+    }
+    if (method === 'DELETE' && id) {
+      const { error } = await supabase.from('incomes').delete().eq('id', id);
+      if (error) throw new Error(error.message);
+      return undefined as unknown as T;
+    }
+  }
+
+  // 10. /users
   if (segments[0] === 'users') {
     const id = segments[1];
     if (method === 'GET' && !id) {

@@ -93,3 +93,11 @@ export interface ISharedAccess {
   shared_with_email: string;
   status: 'pending' | 'accepted' | 'rejected';
 }
+
+export interface IIncome {
+  id: string;
+  description: string;
+  amount: number;
+  person_name: string;
+  is_recurring: boolean;
+}
