@@ -12,6 +12,7 @@ import { FluidModalGlobal } from '../fluidModalGlobal';
 import { PreviewBox, PreviewLabel, PreviewRow, PreviewValue } from '../expenseFormGlobal/style';
 import { formatCurrency } from '../../utils/finance';
 import { formatCurrencyInput, parseCurrencyInput } from '../../utils/mask';
+import { ProportionalBadge } from '../proportionalBadge';
 
 const schema = z.object({
   paid_amount: z.string().min(1, 'Obrigatório'),
@@ -100,6 +101,12 @@ export function cardInvoiceModalGlobal({ visible, card, totalAmount, existingPay
             <PreviewRow>
               <PreviewLabel>Total da fatura</PreviewLabel>
               <PreviewValue>{formatCurrency(totalAmount)}</PreviewValue>
+            </PreviewRow>
+            <PreviewRow style={{ alignItems: 'flex-start' }}>
+              <PreviewLabel>Rateio proporcional</PreviewLabel>
+              <View style={{ alignItems: 'flex-end', flex: 1 }}>
+                <ProportionalBadge amount={totalAmount} />
+              </View>
             </PreviewRow>
             <PreviewRow>
               <PreviewLabel>Status</PreviewLabel>

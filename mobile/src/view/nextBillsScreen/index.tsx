@@ -14,6 +14,7 @@ import { useInstallmentPayments } from '../../hooks/useInstallmentPayments';
 import { useCardInvoicePayments } from '../../hooks/useCardInvoicePayments';
 import { formatCurrency, formatMonth, getInstallments, getMonthKey } from '../../utils/finance';
 import { addMonths, subMonths } from 'date-fns';
+import { ProportionalBadge } from '../../components/proportionalBadge';
 import {
   Header, MonthLabel, MonthNav,
   PaidBadge, PaidBadgeText, StatusBadge,
@@ -313,7 +314,10 @@ export function NextBillsScreen() {
             return (
               <SourceSummaryCard key={src.id}>
                 <SourceHeader onPress={() => toggleExpand(src.id)}>
-                  <SourceSummaryName>{src.name}</SourceSummaryName>
+                  <View style={{ flex: 1 }}>
+                    <SourceSummaryName>{src.name}</SourceSummaryName>
+                    <ProportionalBadge amount={src.total} compact />
+                  </View>
                   <SourceSummaryAmount>{formatCurrency(src.total)}</SourceSummaryAmount>
                   <SourceSummaryStatus paid={invoicePaid}>
                     {invoicePaid ? '✓ Paga' : 'Pendente'}
@@ -328,6 +332,7 @@ export function NextBillsScreen() {
 
                 {expanded && (
                   <SourceExpandedContent>
+                    <ProportionalBadge amount={src.total} variant="banner" />
                     {displayedItems.map((item) => {
                       const isInstallment = item.total > 1;
                       const installmentLabel = isInstallment
@@ -386,7 +391,10 @@ export function NextBillsScreen() {
           return (
             <SourceSummaryCard key={src.id}>
               <SourceHeader onPress={() => toggleExpand(src.id)}>
-                <SourceSummaryName>{src.name}</SourceSummaryName>
+                <View style={{ flex: 1 }}>
+                  <SourceSummaryName>{src.name}</SourceSummaryName>
+                  <ProportionalBadge amount={src.total} compact />
+                </View>
                 <SourceSummaryAmount>{formatCurrency(src.total)}</SourceSummaryAmount>
                 <SourceSummaryStatus paid={allPaid}>
                   {allPaid
@@ -405,6 +413,7 @@ export function NextBillsScreen() {
 
               {expanded && (
                 <SourceExpandedContent>
+                  <ProportionalBadge amount={src.total} variant="banner" />
                   {displayedItems.map((item) => {
                     const paid = isBillInstallmentPaid(item.expense_id, item.number);
                     const isInstallment = item.total > 1;
