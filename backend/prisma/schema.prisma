@@ -69,9 +69,10 @@ model User {
   bill_accounts         BillAccount[]
   expenses              Expense[]
   installment_payments  InstallmentPayment[]
-  card_invoice_payments CardInvoicePayment[]
-  running_debts         RunningDebt[]
-  shared_accesses_owned SharedAccess[]       @relation("SharedAccessOwner")
+  card_invoice_payments     CardInvoicePayment[]
+  running_debts             RunningDebt[]
+  running_debt_transactions RunningDebtTransaction[]
+  shared_accesses_owned     SharedAccess[]       @relation("SharedAccessOwner")
   shared_accesses_with  SharedAccess[]       @relation("SharedAccessSharedWith")
 
   @@map("users")
@@ -179,10 +180,30 @@ model RunningDebt {
   created_at   DateTime @default(now())
   updated_at   DateTime @updatedAt
 
-  creator User @relation(fields: [created_by], references: [id])
+  creator      User                     @relation(fields: [created_by], references: [id])
+  transactions RunningDebtTransaction[]
 
   @@index([created_by])
   @@map("running_debts")
+}
+
+model RunningDebtTransaction {
+  id         String   @id @default(uuid()) @db.Uuid
+  debt_id    String   @db.Uuid
+  type       String   // 'charge' (adicao) ou 'payment' (pagamento)
+  amount     Decimal  @db.Decimal(12, 2)
+  date       DateTime @db.Date
+  notes      String?
+  created_by String   @db.Uuid
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  debt    RunningDebt @relation(fields: [debt_id], references: [id], onDelete: Cascade)
+  creator User        @relation(fields: [created_by], references: [id])
+
+  @@index([debt_id])
+  @@index([created_by])
+  @@map("running_debt_transactions")
 }
 
 model SharedAccess {
