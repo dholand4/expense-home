@@ -12,9 +12,7 @@
       "resizeMode": "contain",
       "backgroundColor": "#0d1a14"
     },
-    "runtimeVersion": {
-      "policy": "appVersion"
-    },
+    "runtimeVersion": "1.0.0",
     "updates": {
       "fallbackToCacheTimeout": 3000,
       "url": "https://u.expo.dev/0ed41d68-929a-4777-bc29-6e68878a4826"
