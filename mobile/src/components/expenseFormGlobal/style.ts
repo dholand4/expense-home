@@ -222,3 +222,70 @@ export const PreviewValue = styled.Text`
   color: ${({ theme }) => theme.colors.text};
   font-weight: 600;
 `;
+
+export const MonthPickerCard = styled.View`
+  background-color: ${({ theme }) => theme.colors.card};
+  border-radius: ${({ theme }) => theme.borderRadius.md}px;
+  border-width: 1px;
+  border-color: ${({ theme }) => theme.colors.border};
+  padding: ${({ theme }) => theme.spacing.sm}px;
+  margin-bottom: ${({ theme }) => theme.spacing.md}px;
+`;
+
+export const MonthNavRow = styled.View`
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+`;
+
+export const MonthNavArrow = styled.TouchableOpacity`
+  padding: ${({ theme }) => theme.spacing.sm}px;
+  align-items: center;
+  justify-content: center;
+`;
+
+export const MonthCenterButton = styled.TouchableOpacity`
+  flex: 1;
+  align-items: center;
+  padding: ${({ theme }) => theme.spacing.xs}px;
+`;
+
+export const MonthCenterText = styled.Text`
+  font-size: ${({ theme }) => theme.typography.body}px;
+  color: ${({ theme }) => theme.colors.text};
+  font-weight: 700;
+  text-transform: capitalize;
+`;
+
+export const MonthCenterSubtext = styled.Text`
+  font-size: 11px;
+  color: ${({ theme }) => theme.colors.primary};
+  margin-top: 2px;
+`;
+
+export const QuickMonthRow = styled.View`
+  flex-direction: row;
+  gap: ${({ theme }) => theme.spacing.xs}px;
+  margin-top: ${({ theme }) => theme.spacing.sm}px;
+  padding-top: ${({ theme }) => theme.spacing.xs}px;
+  border-top-width: 1px;
+  border-top-color: ${({ theme }) => theme.colors.border};
+`;
+
+export const QuickMonthButton = styled.TouchableOpacity<{ active: boolean }>`
+  flex: 1;
+  padding: 6px ${({ theme }) => theme.spacing.sm}px;
+  border-radius: ${({ theme }) => theme.borderRadius.sm}px;
+  border-width: 1px;
+  border-color: ${({ theme, active }) => (active ? theme.colors.primary : theme.colors.border)};
+  background-color: ${({ theme, active }) => (active ? theme.colors.primary + '22' : 'transparent')};
+  align-items: center;
+  justify-content: center;
+`;
+
+export const QuickMonthButtonText = styled.Text<{ active: boolean }>`
+  font-size: 11px;
+  color: ${({ theme, active }) => (active ? theme.colors.primary : theme.colors.textSecondary)};
+  font-weight: ${({ active }) => (active ? '700' : '500')};
+`;
+

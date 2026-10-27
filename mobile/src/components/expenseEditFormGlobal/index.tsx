@@ -1,6 +1,8 @@
 import { Ionicons } from '@expo/vector-icons';
 import { zodResolver } from '@hookform/resolvers/zod';
-import React, { useEffect, useState } from 'react';
+import { addMonths, format, getDate, getDaysInMonth, isSameMonth, parseISO, startOfMonth, subMonths } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Alert, Modal, ScrollView, TouchableOpacity, View } from 'react-native';
 import { Controller, useForm } from 'react-hook-form';
 import { useTheme } from 'styled-components/native';
@@ -16,6 +18,9 @@ import {
   CategoryPickerCard, CategoryPickerHeader, CategoryPickerOverlay, CategoryPickerTitle,
   CategorySelector, CategorySelectorText,
   FieldLabel, WarningText,
+  MonthCenterButton, MonthCenterSubtext, MonthCenterText,
+  MonthNavArrow, MonthNavRow, MonthPickerCard,
+  QuickMonthButton, QuickMonthButtonText, QuickMonthRow,
 } from '../expenseFormGlobal/style';
 
 const schema = z.object({
@@ -37,6 +42,19 @@ export function expenseEditFormGlobal({ visible, expense, onClose, onSubmit }: I
   const theme = useTheme();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [categoryOpen, setCategoryOpen] = useState(false);
+  const [chargeMonth, setChargeMonth] = useState<Date>(() => startOfMonth(new Date()));
+  const [monthPickerOpen, setMonthPickerOpen] = useState(false);
+
+  const currentMonthDate = useMemo(() => startOfMonth(new Date()), []);
+  const nextMonthDate = useMemo(() => addMonths(currentMonthDate, 1), [currentMonthDate]);
+
+  const monthOptions = useMemo(() => {
+    const list: Date[] = [];
+    for (let i = -6; i <= 12; i++) {
+      list.push(addMonths(currentMonthDate, i));
+    }
+    return list;
+  }, [currentMonthDate]);
 
   const { control, handleSubmit, reset, setValue, watch, formState: { errors } } = useForm<IFormData>({
     resolver: zodResolver(schema),
@@ -50,10 +68,49 @@ export function expenseEditFormGlobal({ visible, expense, onClose, onSubmit }: I
       setValue('description', expense.description);
       setValue('total_amount', formatCurrencyInput(expense.total_amount));
       setValue('category', expense.category);
+      if (expense.first_charge_date) {
+        setChargeMonth(startOfMonth(parseISO(expense.first_charge_date)));
+      }
     }
   }, [expense, setValue]);
 
-  const handleClose = () => { reset(); setCategoryOpen(false); onClose(); };
+  const calcUpdatedFirstChargeDate = (targetMonth: Date) => {
+    if (!expense?.first_charge_date) {
+      return format(targetMonth, 'yyyy-MM-dd');
+    }
+    const year = targetMonth.getFullYear();
+    const month = targetMonth.getMonth();
+    const maxDays = getDaysInMonth(targetMonth);
+
+    let originalDay = 1;
+    try {
+      originalDay = getDate(parseISO(expense.first_charge_date));
+    } catch {
+      originalDay = 1;
+    }
+
+    const validDay = Math.min(originalDay, maxDays);
+    return format(new Date(year, month, validDay), 'yyyy-MM-dd');
+  };
+
+  const currentFirstChargeDate = useMemo(() => {
+    return calcUpdatedFirstChargeDate(chargeMonth);
+  }, [chargeMonth, expense]);
+
+  const formattedChargeDate = useMemo(() => {
+    try {
+      return format(parseISO(currentFirstChargeDate), "dd 'de' MMMM 'de' yyyy", { locale: ptBR });
+    } catch {
+      return currentFirstChargeDate;
+    }
+  }, [currentFirstChargeDate]);
+
+  const handleClose = () => {
+    reset();
+    setCategoryOpen(false);
+    setMonthPickerOpen(false);
+    onClose();
+  };
 
   const onFormSubmit = async (data: IFormData) => {
     if (!expense) return;
@@ -65,10 +122,12 @@ export function expenseEditFormGlobal({ visible, expense, onClose, onSubmit }: I
 
     setIsSubmitting(true);
     try {
+      const updatedChargeDate = calcUpdatedFirstChargeDate(chargeMonth);
       await onSubmit(expense.id, {
         description: data.description,
         total_amount: amountVal,
         category: data.category,
+        first_charge_date: updatedChargeDate,
       });
       onClose();
     } catch {
@@ -112,6 +171,48 @@ export function expenseEditFormGlobal({ visible, expense, onClose, onSubmit }: I
           )}
         />
         <View>
+          <FieldLabel>Mês de início da cobrança</FieldLabel>
+          <MonthPickerCard>
+            <MonthNavRow>
+              <MonthNavArrow onPress={() => setChargeMonth(prev => startOfMonth(subMonths(prev, 1)))}>
+                <Ionicons name="chevron-back" size={20} color={theme.colors.primary} />
+              </MonthNavArrow>
+              <MonthCenterButton onPress={() => setMonthPickerOpen(true)}>
+                <MonthCenterText>
+                  {format(chargeMonth, "MMMM 'de' yyyy", { locale: ptBR })}
+                </MonthCenterText>
+                <MonthCenterSubtext>
+                  Cobrança em: {formattedChargeDate}
+                </MonthCenterSubtext>
+              </MonthCenterButton>
+              <MonthNavArrow onPress={() => setChargeMonth(prev => startOfMonth(addMonths(prev, 1)))}>
+                <Ionicons name="chevron-forward" size={20} color={theme.colors.primary} />
+              </MonthNavArrow>
+            </MonthNavRow>
+
+            <QuickMonthRow>
+              <QuickMonthButton
+                active={isSameMonth(chargeMonth, currentMonthDate)}
+                onPress={() => setChargeMonth(currentMonthDate)}
+              >
+                <QuickMonthButtonText active={isSameMonth(chargeMonth, currentMonthDate)}>
+                  Mês atual ({format(currentMonthDate, 'MMM', { locale: ptBR })})
+                </QuickMonthButtonText>
+              </QuickMonthButton>
+
+              <QuickMonthButton
+                active={isSameMonth(chargeMonth, nextMonthDate)}
+                onPress={() => setChargeMonth(nextMonthDate)}
+              >
+                <QuickMonthButtonText active={isSameMonth(chargeMonth, nextMonthDate)}>
+                  Próximo mês ({format(nextMonthDate, 'MMM', { locale: ptBR })})
+                </QuickMonthButtonText>
+              </QuickMonthButton>
+            </QuickMonthRow>
+          </MonthPickerCard>
+        </View>
+
+        <View>
           <FieldLabel>Categoria</FieldLabel>
           <CategorySelector hasValue={!!category} onPress={() => setCategoryOpen(true)}>
             <CategorySelectorText hasValue={!!category}>
@@ -146,6 +247,49 @@ export function expenseEditFormGlobal({ visible, expense, onClose, onSubmit }: I
                         <CategoryDot color={info.color} />
                         <CategoryItemText active={active} color={info.color}>{info.label}</CategoryItemText>
                         {active && <Ionicons name="checkmark" size={16} color={info.color} />}
+                      </CategoryItem>
+                    );
+                  })}
+                </ScrollView>
+              </CategoryPickerCard>
+            </TouchableOpacity>
+          </CategoryPickerOverlay>
+        </Modal>
+
+        <Modal visible={monthPickerOpen} transparent animationType="fade" onRequestClose={() => setMonthPickerOpen(false)}>
+          <CategoryPickerOverlay activeOpacity={1} onPress={() => setMonthPickerOpen(false)}>
+            <TouchableOpacity activeOpacity={1} onPress={() => {}}>
+              <CategoryPickerCard>
+                <CategoryPickerHeader>
+                  <CategoryPickerTitle>Selecione o mês de início</CategoryPickerTitle>
+                  <TouchableOpacity onPress={() => setMonthPickerOpen(false)}>
+                    <Ionicons name="close" size={20} color={theme.colors.textSecondary} />
+                  </TouchableOpacity>
+                </CategoryPickerHeader>
+                <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+                  {monthOptions.map(mDate => {
+                    const active = isSameMonth(chargeMonth, mDate);
+                    const isCurrent = isSameMonth(mDate, currentMonthDate);
+                    const isNext = isSameMonth(mDate, nextMonthDate);
+                    const label = format(mDate, "MMMM 'de' yyyy", { locale: ptBR });
+                    const suffix = isCurrent ? ' (Mês atual)' : isNext ? ' (Próximo mês)' : '';
+                    return (
+                      <CategoryItem
+                        key={mDate.toISOString()}
+                        active={active}
+                        color={theme.colors.primary}
+                        onPress={() => { setChargeMonth(mDate); setMonthPickerOpen(false); }}
+                      >
+                        <Ionicons
+                          name="calendar-outline"
+                          size={18}
+                          color={active ? theme.colors.primary : theme.colors.textSecondary}
+                          style={{ marginRight: 10 }}
+                        />
+                        <CategoryItemText active={active} color={theme.colors.primary}>
+                          {label}{suffix}
+                        </CategoryItemText>
+                        {active && <Ionicons name="checkmark" size={16} color={theme.colors.primary} />}
                       </CategoryItem>
                     );
                   })}
