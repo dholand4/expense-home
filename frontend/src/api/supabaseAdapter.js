@@ -38,7 +38,7 @@ export async function handleSupabaseRequest(method, path, body) {
     if (action === 'me') {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Não autenticado');
-      const { data } = await supabase.from('users').select('*').eq('id', user.id).maybeSingle();
+      const { data } = await supabase.from('eh_users').select('*').eq('id', user.id).maybeSingle();
       return {
         user: {
           id: user.id,

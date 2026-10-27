@@ -3,7 +3,7 @@ import { formatSupabaseRecord } from './format';
 
 export async function listUsers() {
   const { data, error } = await supabase
-    .from('users')
+    .from('eh_users')
     .select('*')
     .order('created_at', { ascending: true });
 
@@ -13,7 +13,7 @@ export async function listUsers() {
 
 export async function updateUser(id, data) {
   const { data: result, error } = await supabase
-    .from('users')
+    .from('eh_users')
     .update(data)
     .eq('id', id)
     .select('*')
@@ -24,7 +24,7 @@ export async function updateUser(id, data) {
 }
 
 export async function deleteUser(id) {
-  const { error } = await supabase.from('users').delete().eq('id', id);
+  const { error } = await supabase.from('eh_users').delete().eq('id', id);
   if (error) throw new Error(error.message);
 }
 

@@ -44,7 +44,7 @@ async function main() {
     console.log(`Migrando ${backup.User.length} usuários...`);
     for (const u of backup.User) {
       // Inserir diretamente em public.users
-      const { error } = await supabase.from('users').upsert({
+      const { error } = await supabase.from('eh_users').upsert({
         id: u.id,
         email: u.email.toLowerCase().trim(),
         full_name: u.full_name,
@@ -60,14 +60,14 @@ async function main() {
   // 2. Inserir Cartões
   if (backup.Card && backup.Card.length > 0) {
     console.log(`Migrando ${backup.Card.length} cartões...`);
-    const { error } = await supabase.from('cards').upsert(backup.Card);
+    const { error } = await supabase.from('eh_cards').upsert(backup.Card);
     if (error) console.error('Erro ao migrar cartões:', error.message);
   }
 
   // 3. Inserir Contas
   if (backup.BillAccount && backup.BillAccount.length > 0) {
     console.log(`Migrando ${backup.BillAccount.length} contas...`);
-    const { error } = await supabase.from('bill_accounts').upsert(backup.BillAccount);
+    const { error } = await supabase.from('eh_bill_accounts').upsert(backup.BillAccount);
     if (error) console.error('Erro ao migrar contas:', error.message);
   }
 
@@ -78,7 +78,7 @@ async function main() {
       ...e,
       first_charge_date: e.first_charge_date.slice(0, 10),
     }));
-    const { error } = await supabase.from('expenses').upsert(expenses);
+    const { error } = await supabase.from('eh_expenses').upsert(expenses);
     if (error) console.error('Erro ao migrar despesas:', error.message);
   }
 
@@ -89,7 +89,7 @@ async function main() {
       ...p,
       paid_date: p.paid_date.slice(0, 10),
     }));
-    const { error } = await supabase.from('installment_payments').upsert(installments);
+    const { error } = await supabase.from('eh_installment_payments').upsert(installments);
     if (error) console.error('Erro ao migrar parcelas:', error.message);
   }
 
@@ -100,21 +100,21 @@ async function main() {
       ...i,
       paid_date: i.paid_date.slice(0, 10),
     }));
-    const { error } = await supabase.from('card_invoice_payments').upsert(invoices);
+    const { error } = await supabase.from('eh_card_invoice_payments').upsert(invoices);
     if (error) console.error('Erro ao migrar faturas:', error.message);
   }
 
   // 7. Inserir Dívidas
   if (backup.RunningDebt && backup.RunningDebt.length > 0) {
     console.log(`Migrando ${backup.RunningDebt.length} dívidas em andamento...`);
-    const { error } = await supabase.from('running_debts').upsert(backup.RunningDebt);
+    const { error } = await supabase.from('eh_running_debts').upsert(backup.RunningDebt);
     if (error) console.error('Erro ao migrar dívidas:', error.message);
   }
 
   // 8. Inserir Acessos Compartilhados
   if (backup.SharedAccess && backup.SharedAccess.length > 0) {
     console.log(`Migrando ${backup.SharedAccess.length} acessos compartilhados...`);
-    const { error } = await supabase.from('shared_accesses').upsert(backup.SharedAccess);
+    const { error } = await supabase.from('eh_shared_accesses').upsert(backup.SharedAccess);
     if (error) console.error('Erro ao migrar acessos compartilhados:', error.message);
   }
 

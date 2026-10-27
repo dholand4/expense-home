@@ -13,8 +13,8 @@ function sanitizeInvoicePaymentData(data) {
 
 export async function listCardInvoicePayments() {
   const { data, error } = await supabase
-    .from('card_invoice_payments')
-    .select('*, users(email)')
+    .from('eh_card_invoice_payments')
+    .select('*, users:eh_users(email)')
     .order('created_at', { ascending: false });
 
   if (error) throw new Error(error.message);
@@ -23,8 +23,8 @@ export async function listCardInvoicePayments() {
 
 export async function getCardInvoicePayment(cardId, monthKey) {
   const { data, error } = await supabase
-    .from('card_invoice_payments')
-    .select('*, users(email)')
+    .from('eh_card_invoice_payments')
+    .select('*, users:eh_users(email)')
     .eq('card_id', cardId)
     .eq('month_key', monthKey)
     .maybeSingle();
@@ -43,9 +43,9 @@ export async function createCardInvoicePayment(paymentData) {
   });
 
   const { data, error } = await supabase
-    .from('card_invoice_payments')
+    .from('eh_card_invoice_payments')
     .insert(payload)
-    .select('*, users(email)')
+    .select('*, users:eh_users(email)')
     .single();
 
   if (error) throw new Error(error.message);
@@ -56,10 +56,10 @@ export async function updateCardInvoicePayment(id, paymentData) {
   const payload = sanitizeInvoicePaymentData(paymentData);
 
   const { data, error } = await supabase
-    .from('card_invoice_payments')
+    .from('eh_card_invoice_payments')
     .update(payload)
     .eq('id', id)
-    .select('*, users(email)')
+    .select('*, users:eh_users(email)')
     .single();
 
   if (error) throw new Error(error.message);
@@ -67,6 +67,6 @@ export async function updateCardInvoicePayment(id, paymentData) {
 }
 
 export async function deleteCardInvoicePayment(id) {
-  const { error } = await supabase.from('card_invoice_payments').delete().eq('id', id);
+  const { error } = await supabase.from('eh_card_invoice_payments').delete().eq('id', id);
   if (error) throw new Error(error.message);
 }

@@ -2,7 +2,7 @@ import { supabase } from '@/api/supabaseClient';
 import { formatSupabaseRecord } from './format';
 
 export async function listSharedAccesses({ owner_email, shared_with_email } = {}) {
-  let query = supabase.from('shared_accesses').select('*');
+  let query = supabase.from('eh_shared_accesses').select('*');
 
   if (owner_email) {
     query = query.eq('owner_email', owner_email);
@@ -21,7 +21,7 @@ export async function createSharedAccess({ shared_with_email }) {
   if (!user || !user.email) throw new Error('Usuário não autenticado.');
 
   const { data, error } = await supabase
-    .from('shared_accesses')
+    .from('eh_shared_accesses')
     .insert({
       owner_email: user.email.toLowerCase().trim(),
       shared_with_email: shared_with_email.toLowerCase().trim(),
@@ -36,7 +36,7 @@ export async function createSharedAccess({ shared_with_email }) {
 
 export async function updateSharedAccess(id, data) {
   const { data: result, error } = await supabase
-    .from('shared_accesses')
+    .from('eh_shared_accesses')
     .update(data)
     .eq('id', id)
     .select('*')
@@ -47,6 +47,6 @@ export async function updateSharedAccess(id, data) {
 }
 
 export async function deleteSharedAccess(id) {
-  const { error } = await supabase.from('shared_accesses').delete().eq('id', id);
+  const { error } = await supabase.from('eh_shared_accesses').delete().eq('id', id);
   if (error) throw new Error(error.message);
 }

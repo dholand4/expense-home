@@ -13,8 +13,8 @@ function sanitizeExpenseData(data) {
 
 export async function listExpenses() {
   const { data, error } = await supabase
-    .from('expenses')
-    .select('*, users(email)')
+    .from('eh_expenses')
+    .select('*, users:eh_users(email)')
     .order('created_at', { ascending: false });
 
   if (error) throw new Error(error.message);
@@ -31,9 +31,9 @@ export async function createExpense(expenseData) {
   });
 
   const { data, error } = await supabase
-    .from('expenses')
+    .from('eh_expenses')
     .insert(payload)
-    .select('*, users(email)')
+    .select('*, users:eh_users(email)')
     .single();
 
   if (error) throw new Error(error.message);
@@ -44,10 +44,10 @@ export async function updateExpense(id, expenseData) {
   const payload = sanitizeExpenseData(expenseData);
 
   const { data, error } = await supabase
-    .from('expenses')
+    .from('eh_expenses')
     .update(payload)
     .eq('id', id)
-    .select('*, users(email)')
+    .select('*, users:eh_users(email)')
     .single();
 
   if (error) throw new Error(error.message);
@@ -55,6 +55,6 @@ export async function updateExpense(id, expenseData) {
 }
 
 export async function deleteExpense(id) {
-  const { error } = await supabase.from('expenses').delete().eq('id', id);
+  const { error } = await supabase.from('eh_expenses').delete().eq('id', id);
   if (error) throw new Error(error.message);
 }

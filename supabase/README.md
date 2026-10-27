@@ -23,6 +23,8 @@ No painel do seu projeto Supabase:
 
 Pronto! Todas as tabelas, índices, enums, triggers e regras de segurança (Row Level Security) estão configuradas.
 
+> As tabelas, o enum `eh_user_role` e as funções deste app usam o prefixo `eh_`, porque o projeto Supabase é compartilhado com outros apps. Projetos criados antes dessa mudança devem rodar [`supabase/migration_eh_prefix.sql`](./migration_eh_prefix.sql) uma única vez.
+
 ---
 
 ### 3. Obter as Chaves de Conexão
@@ -83,5 +85,5 @@ O projeto foi estruturado para suportar **ambos os backends**:
 - O Supabase Auth gerencia usuários, senhas criptografadas e tokens JWT automaticamente.
 - A segurança é garantida diretamente no PostgreSQL via **Row Level Security (RLS)**:
   - Cada usuário só acessa seus próprios dados (`created_by = auth.uid()`).
-  - Quando um acesso compartilhado é concedido e aceito (`shared_accesses`), a política permite que o convidado visualize as despesas e faturas do proprietário em modo leitura.
+  - Quando um acesso compartilhado é concedido e aceito (`eh_shared_accesses`), a política permite que o convidado visualize as despesas e faturas do proprietário em modo leitura.
 - Não há necessidade de middleware de autenticação intermediário.

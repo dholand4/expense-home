@@ -3,8 +3,8 @@ import { formatSupabaseRecord } from './format';
 
 export async function listCards() {
   const { data, error } = await supabase
-    .from('cards')
-    .select('*, users(email)')
+    .from('eh_cards')
+    .select('*, users:eh_users(email)')
     .order('created_at', { ascending: false });
 
   if (error) throw new Error(error.message);
@@ -16,9 +16,9 @@ export async function createCard(cardData) {
   if (!user) throw new Error('Usuário não autenticado.');
 
   const { data, error } = await supabase
-    .from('cards')
+    .from('eh_cards')
     .insert({ ...cardData, created_by: user.id })
-    .select('*, users(email)')
+    .select('*, users:eh_users(email)')
     .single();
 
   if (error) throw new Error(error.message);
@@ -27,10 +27,10 @@ export async function createCard(cardData) {
 
 export async function updateCard(id, cardData) {
   const { data, error } = await supabase
-    .from('cards')
+    .from('eh_cards')
     .update(cardData)
     .eq('id', id)
-    .select('*, users(email)')
+    .select('*, users:eh_users(email)')
     .single();
 
   if (error) throw new Error(error.message);
@@ -38,6 +38,6 @@ export async function updateCard(id, cardData) {
 }
 
 export async function deleteCard(id) {
-  const { error } = await supabase.from('cards').delete().eq('id', id);
+  const { error } = await supabase.from('eh_cards').delete().eq('id', id);
   if (error) throw new Error(error.message);
 }

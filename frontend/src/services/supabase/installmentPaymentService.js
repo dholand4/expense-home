@@ -13,8 +13,8 @@ function sanitizePaymentData(data) {
 
 export async function listPaymentsByMonth(monthKey) {
   const { data, error } = await supabase
-    .from('installment_payments')
-    .select('*, users(email)')
+    .from('eh_installment_payments')
+    .select('*, users:eh_users(email)')
     .eq('month_key', monthKey)
     .order('created_at', { ascending: false });
 
@@ -24,8 +24,8 @@ export async function listPaymentsByMonth(monthKey) {
 
 export async function listAllPayments() {
   const { data, error } = await supabase
-    .from('installment_payments')
-    .select('*, users(email)')
+    .from('eh_installment_payments')
+    .select('*, users:eh_users(email)')
     .order('created_at', { ascending: false });
 
   if (error) throw new Error(error.message);
@@ -34,8 +34,8 @@ export async function listAllPayments() {
 
 export async function listPaymentsByExpense(expenseId) {
   const { data, error } = await supabase
-    .from('installment_payments')
-    .select('*, users(email)')
+    .from('eh_installment_payments')
+    .select('*, users:eh_users(email)')
     .eq('expense_id', expenseId)
     .order('installment_number', { ascending: true });
 
@@ -53,9 +53,9 @@ export async function createPayment(paymentData) {
   });
 
   const { data, error } = await supabase
-    .from('installment_payments')
+    .from('eh_installment_payments')
     .insert(payload)
-    .select('*, users(email)')
+    .select('*, users:eh_users(email)')
     .single();
 
   if (error) throw new Error(error.message);
@@ -63,6 +63,6 @@ export async function createPayment(paymentData) {
 }
 
 export async function deletePayment(id) {
-  const { error } = await supabase.from('installment_payments').delete().eq('id', id);
+  const { error } = await supabase.from('eh_installment_payments').delete().eq('id', id);
   if (error) throw new Error(error.message);
 }

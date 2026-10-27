@@ -3,8 +3,8 @@ import { formatSupabaseRecord } from './format';
 
 export async function listRunningDebts() {
   const { data, error } = await supabase
-    .from('running_debts')
-    .select('*, users(email)')
+    .from('eh_running_debts')
+    .select('*, users:eh_users(email)')
     .order('created_at', { ascending: false });
 
   if (error) throw new Error(error.message);
@@ -18,19 +18,19 @@ export async function createRunningDebt(debtData) {
   const initialAmount = Number(debtData.total_amount);
 
   const { data, error } = await supabase
-    .from('running_debts')
+    .from('eh_running_debts')
     .insert({
       ...debtData,
       amount_paid: debtData.amount_paid ?? 0,
       created_by: user.id,
     })
-    .select('*, users(email)')
+    .select('*, users:eh_users(email)')
     .single();
 
   if (error) throw new Error(error.message);
 
   // Transação inicial de registro
-  await supabase.from('running_debt_transactions').insert({
+  await supabase.from('eh_running_debt_transactions').insert({
     debt_id: data.id,
     type: 'charge',
     amount: initialAmount,
@@ -44,10 +44,10 @@ export async function createRunningDebt(debtData) {
 
 export async function updateRunningDebt(id, debtData) {
   const { data, error } = await supabase
-    .from('running_debts')
+    .from('eh_running_debts')
     .update(debtData)
     .eq('id', id)
-    .select('*, users(email)')
+    .select('*, users:eh_users(email)')
     .single();
 
   if (error) throw new Error(error.message);
@@ -55,13 +55,13 @@ export async function updateRunningDebt(id, debtData) {
 }
 
 export async function deleteRunningDebt(id) {
-  const { error } = await supabase.from('running_debts').delete().eq('id', id);
+  const { error } = await supabase.from('eh_running_debts').delete().eq('id', id);
   if (error) throw new Error(error.message);
 }
 
 export async function listDebtTransactions(debtId) {
   const { data, error } = await supabase
-    .from('running_debt_transactions')
+    .from('eh_running_debt_transactions')
     .select('*')
     .eq('debt_id', debtId)
     .order('date', { ascending: false })
@@ -79,7 +79,7 @@ export async function addDebtTransaction({ debt_id, type, amount, date, notes })
   const txDate = date ? (typeof date === 'string' ? date.slice(0, 10) : date.toISOString().slice(0, 10)) : new Date().toISOString().slice(0, 10);
 
   const { data, error } = await supabase
-    .from('running_debt_transactions')
+    .from('eh_running_debt_transactions')
     .insert({
       debt_id,
       type,
@@ -95,7 +95,7 @@ export async function addDebtTransaction({ debt_id, type, amount, date, notes })
 
   // Atualizar saldo da dívida
   const { data: currentDebt } = await supabase
-    .from('running_debts')
+    .from('eh_running_debts')
     .select('total_amount, amount_paid')
     .eq('id', debt_id)
     .single();
@@ -103,12 +103,12 @@ export async function addDebtTransaction({ debt_id, type, amount, date, notes })
   if (currentDebt) {
     if (type === 'charge') {
       await supabase
-        .from('running_debts')
+        .from('eh_running_debts')
         .update({ total_amount: Number(currentDebt.total_amount) + numAmount })
         .eq('id', debt_id);
     } else if (type === 'payment') {
       await supabase
-        .from('running_debts')
+        .from('eh_running_debts')
         .update({ amount_paid: Number(currentDebt.amount_paid) + numAmount })
         .eq('id', debt_id);
     }
@@ -118,6 +118,6 @@ export async function addDebtTransaction({ debt_id, type, amount, date, notes })
 }
 
 export async function deleteDebtTransaction(id) {
-  const { error } = await supabase.from('running_debt_transactions').delete().eq('id', id);
+  const { error } = await supabase.from('eh_running_debt_transactions').delete().eq('id', id);
   if (error) throw new Error(error.message);
 }

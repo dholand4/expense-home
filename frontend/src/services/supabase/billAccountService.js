@@ -3,8 +3,8 @@ import { formatSupabaseRecord } from './format';
 
 export async function listBillAccounts() {
   const { data, error } = await supabase
-    .from('bill_accounts')
-    .select('*, users(email)')
+    .from('eh_bill_accounts')
+    .select('*, users:eh_users(email)')
     .order('created_at', { ascending: false });
 
   if (error) throw new Error(error.message);
@@ -16,9 +16,9 @@ export async function createBillAccount(accountData) {
   if (!user) throw new Error('Usuário não autenticado.');
 
   const { data, error } = await supabase
-    .from('bill_accounts')
+    .from('eh_bill_accounts')
     .insert({ ...accountData, created_by: user.id })
-    .select('*, users(email)')
+    .select('*, users:eh_users(email)')
     .single();
 
   if (error) throw new Error(error.message);
@@ -27,10 +27,10 @@ export async function createBillAccount(accountData) {
 
 export async function updateBillAccount(id, accountData) {
   const { data, error } = await supabase
-    .from('bill_accounts')
+    .from('eh_bill_accounts')
     .update(accountData)
     .eq('id', id)
-    .select('*, users(email)')
+    .select('*, users:eh_users(email)')
     .single();
 
   if (error) throw new Error(error.message);
@@ -38,6 +38,6 @@ export async function updateBillAccount(id, accountData) {
 }
 
 export async function deleteBillAccount(id) {
-  const { error } = await supabase.from('bill_accounts').delete().eq('id', id);
+  const { error } = await supabase.from('eh_bill_accounts').delete().eq('id', id);
   if (error) throw new Error(error.message);
 }

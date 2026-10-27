@@ -32,7 +32,7 @@ export async function handleSupabaseRequest<T>(method: string, path: string, bod
       }
       const authUser = data.user;
       const token = data.session?.access_token || '';
-      const { data: profile } = await supabase.from('users').select('*').eq('id', authUser.id).maybeSingle();
+      const { data: profile } = await supabase.from('eh_users').select('*').eq('id', authUser.id).maybeSingle();
 
       const user: IUser = {
         id: authUser.id,
@@ -66,7 +66,7 @@ export async function handleSupabaseRequest<T>(method: string, path: string, bod
     if (action === 'me') {
       const { data: { user: authUser } } = await supabase.auth.getUser();
       if (!authUser) throw new Error('Não autenticado');
-      const { data: profile } = await supabase.from('users').select('*').eq('id', authUser.id).maybeSingle();
+      const { data: profile } = await supabase.from('eh_users').select('*').eq('id', authUser.id).maybeSingle();
 
       const user: IUser = {
         id: authUser.id,
@@ -107,23 +107,23 @@ export async function handleSupabaseRequest<T>(method: string, path: string, bod
   if (segments[0] === 'cards') {
     const id = segments[1];
     if (method === 'GET' && !id) {
-      const { data, error } = await supabase.from('cards').select('*, users(email)').order('created_at', { ascending: false });
+      const { data, error } = await supabase.from('eh_cards').select('*, users:eh_users(email)').order('created_at', { ascending: false });
       if (error) throw new Error(error.message);
       return (data || []).map(formatSupabaseRecord) as unknown as T;
     }
     if (method === 'POST') {
       const userId = await getAuthUserId();
-      const { data, error } = await supabase.from('cards').insert({ ...body, created_by: userId }).select('*, users(email)').single();
+      const { data, error } = await supabase.from('eh_cards').insert({ ...body, created_by: userId }).select('*, users:eh_users(email)').single();
       if (error) throw new Error(error.message);
       return formatSupabaseRecord(data) as unknown as T;
     }
     if (method === 'PATCH' && id) {
-      const { data, error } = await supabase.from('cards').update(body).eq('id', id).select('*, users(email)').single();
+      const { data, error } = await supabase.from('eh_cards').update(body).eq('id', id).select('*, users:eh_users(email)').single();
       if (error) throw new Error(error.message);
       return formatSupabaseRecord(data) as unknown as T;
     }
     if (method === 'DELETE' && id) {
-      const { error } = await supabase.from('cards').delete().eq('id', id);
+      const { error } = await supabase.from('eh_cards').delete().eq('id', id);
       if (error) throw new Error(error.message);
       return undefined as unknown as T;
     }
@@ -133,23 +133,23 @@ export async function handleSupabaseRequest<T>(method: string, path: string, bod
   if (segments[0] === 'bill-accounts') {
     const id = segments[1];
     if (method === 'GET' && !id) {
-      const { data, error } = await supabase.from('bill_accounts').select('*, users(email)').order('created_at', { ascending: false });
+      const { data, error } = await supabase.from('eh_bill_accounts').select('*, users:eh_users(email)').order('created_at', { ascending: false });
       if (error) throw new Error(error.message);
       return (data || []).map(formatSupabaseRecord) as unknown as T;
     }
     if (method === 'POST') {
       const userId = await getAuthUserId();
-      const { data, error } = await supabase.from('bill_accounts').insert({ ...body, created_by: userId }).select('*, users(email)').single();
+      const { data, error } = await supabase.from('eh_bill_accounts').insert({ ...body, created_by: userId }).select('*, users:eh_users(email)').single();
       if (error) throw new Error(error.message);
       return formatSupabaseRecord(data) as unknown as T;
     }
     if (method === 'PATCH' && id) {
-      const { data, error } = await supabase.from('bill_accounts').update(body).eq('id', id).select('*, users(email)').single();
+      const { data, error } = await supabase.from('eh_bill_accounts').update(body).eq('id', id).select('*, users:eh_users(email)').single();
       if (error) throw new Error(error.message);
       return formatSupabaseRecord(data) as unknown as T;
     }
     if (method === 'DELETE' && id) {
-      const { error } = await supabase.from('bill_accounts').delete().eq('id', id);
+      const { error } = await supabase.from('eh_bill_accounts').delete().eq('id', id);
       if (error) throw new Error(error.message);
       return undefined as unknown as T;
     }
@@ -159,7 +159,7 @@ export async function handleSupabaseRequest<T>(method: string, path: string, bod
   if (segments[0] === 'expenses') {
     const id = segments[1];
     if (method === 'GET' && !id) {
-      const { data, error } = await supabase.from('expenses').select('*, users(email)').order('created_at', { ascending: false });
+      const { data, error } = await supabase.from('eh_expenses').select('*, users:eh_users(email)').order('created_at', { ascending: false });
       if (error) throw new Error(error.message);
       return (data || []).map(formatSupabaseRecord) as unknown as T;
     }
@@ -170,19 +170,19 @@ export async function handleSupabaseRequest<T>(method: string, path: string, bod
         created_by: userId,
         first_charge_date: sanitizeDate(body.first_charge_date),
       };
-      const { data, error } = await supabase.from('expenses').insert(payload).select('*, users(email)').single();
+      const { data, error } = await supabase.from('eh_expenses').insert(payload).select('*, users:eh_users(email)').single();
       if (error) throw new Error(error.message);
       return formatSupabaseRecord(data) as unknown as T;
     }
     if (method === 'PATCH' && id) {
       const payload = { ...body };
       if (payload.first_charge_date) payload.first_charge_date = sanitizeDate(payload.first_charge_date);
-      const { data, error } = await supabase.from('expenses').update(payload).eq('id', id).select('*, users(email)').single();
+      const { data, error } = await supabase.from('eh_expenses').update(payload).eq('id', id).select('*, users:eh_users(email)').single();
       if (error) throw new Error(error.message);
       return formatSupabaseRecord(data) as unknown as T;
     }
     if (method === 'DELETE' && id) {
-      const { error } = await supabase.from('expenses').delete().eq('id', id);
+      const { error } = await supabase.from('eh_expenses').delete().eq('id', id);
       if (error) throw new Error(error.message);
       return undefined as unknown as T;
     }
@@ -192,7 +192,7 @@ export async function handleSupabaseRequest<T>(method: string, path: string, bod
   if (segments[0] === 'installment-payments') {
     const id = segments[1];
     if (method === 'GET' && !id) {
-      let query = supabase.from('installment_payments').select('*, users(email)');
+      let query = supabase.from('eh_installment_payments').select('*, users:eh_users(email)');
       const monthKey = searchParams.get('month_key');
       const expenseId = searchParams.get('expense_id');
       if (monthKey) query = query.eq('month_key', monthKey);
@@ -209,12 +209,12 @@ export async function handleSupabaseRequest<T>(method: string, path: string, bod
         created_by: userId,
         paid_date: sanitizeDate(body.paid_date),
       };
-      const { data, error } = await supabase.from('installment_payments').insert(payload).select('*, users(email)').single();
+      const { data, error } = await supabase.from('eh_installment_payments').insert(payload).select('*, users:eh_users(email)').single();
       if (error) throw new Error(error.message);
       return formatSupabaseRecord(data) as unknown as T;
     }
     if (method === 'DELETE' && id) {
-      const { error } = await supabase.from('installment_payments').delete().eq('id', id);
+      const { error } = await supabase.from('eh_installment_payments').delete().eq('id', id);
       if (error) throw new Error(error.message);
       return undefined as unknown as T;
     }
@@ -224,7 +224,7 @@ export async function handleSupabaseRequest<T>(method: string, path: string, bod
   if (segments[0] === 'card-invoice-payments') {
     const id = segments[1];
     if (method === 'GET' && !id) {
-      let query = supabase.from('card_invoice_payments').select('*, users(email)');
+      let query = supabase.from('eh_card_invoice_payments').select('*, users:eh_users(email)');
       const cardId = searchParams.get('card_id');
       const monthKey = searchParams.get('month_key');
       if (cardId) query = query.eq('card_id', cardId);
@@ -241,19 +241,19 @@ export async function handleSupabaseRequest<T>(method: string, path: string, bod
         created_by: userId,
         paid_date: sanitizeDate(body.paid_date),
       };
-      const { data, error } = await supabase.from('card_invoice_payments').insert(payload).select('*, users(email)').single();
+      const { data, error } = await supabase.from('eh_card_invoice_payments').insert(payload).select('*, users:eh_users(email)').single();
       if (error) throw new Error(error.message);
       return formatSupabaseRecord(data) as unknown as T;
     }
     if (method === 'PATCH' && id) {
       const payload = { ...body };
       if (payload.paid_date) payload.paid_date = sanitizeDate(payload.paid_date);
-      const { data, error } = await supabase.from('card_invoice_payments').update(payload).eq('id', id).select('*, users(email)').single();
+      const { data, error } = await supabase.from('eh_card_invoice_payments').update(payload).eq('id', id).select('*, users:eh_users(email)').single();
       if (error) throw new Error(error.message);
       return formatSupabaseRecord(data) as unknown as T;
     }
     if (method === 'DELETE' && id) {
-      const { error } = await supabase.from('card_invoice_payments').delete().eq('id', id);
+      const { error } = await supabase.from('eh_card_invoice_payments').delete().eq('id', id);
       if (error) throw new Error(error.message);
       return undefined as unknown as T;
     }
@@ -278,7 +278,7 @@ export async function handleSupabaseRequest<T>(method: string, path: string, bod
 
         let tx = null;
         const { data: insertedTx, error: txErr } = await supabase
-          .from('running_debt_transactions')
+          .from('eh_running_debt_transactions')
           .insert(payload)
           .select('*')
           .single();
@@ -286,7 +286,7 @@ export async function handleSupabaseRequest<T>(method: string, path: string, bod
         if (txErr) {
           // Se a tabela ainda não foi criada no Supabase pelo usuário, não quebra a tela
           if (txErr.code === '42P01' || txErr.message?.includes('does not exist')) {
-            console.warn('Tabela running_debt_transactions ainda não criada no Supabase.');
+            console.warn('Tabela eh_running_debt_transactions ainda não criada no Supabase.');
           } else {
             throw new Error(txErr.message);
           }
@@ -295,22 +295,22 @@ export async function handleSupabaseRequest<T>(method: string, path: string, bod
         }
 
         // Atualizar saldo da dívida
-        const { data: currentDebt, error: getErr } = await supabase.from('running_debts').select('total_amount, amount_paid').eq('id', body.debt_id).single();
+        const { data: currentDebt, error: getErr } = await supabase.from('eh_running_debts').select('total_amount, amount_paid').eq('id', body.debt_id).single();
         if (getErr) throw new Error(getErr.message);
 
         if (currentDebt) {
           if (body.type === 'charge') {
-            const { error: updErr } = await supabase.from('running_debts').update({ total_amount: Number(currentDebt.total_amount) + Number(body.amount) }).eq('id', body.debt_id);
+            const { error: updErr } = await supabase.from('eh_running_debts').update({ total_amount: Number(currentDebt.total_amount) + Number(body.amount) }).eq('id', body.debt_id);
             if (updErr) throw new Error(updErr.message);
           } else if (body.type === 'payment') {
-            const { error: updErr } = await supabase.from('running_debts').update({ amount_paid: Number(currentDebt.amount_paid) + Number(body.amount) }).eq('id', body.debt_id);
+            const { error: updErr } = await supabase.from('eh_running_debts').update({ amount_paid: Number(currentDebt.amount_paid) + Number(body.amount) }).eq('id', body.debt_id);
             if (updErr) throw new Error(updErr.message);
           }
         }
         return formatSupabaseRecord(tx || { ...payload, id: `temp-${Date.now()}` }) as unknown as T;
       }
       if (method === 'DELETE' && txId) {
-        const { error } = await supabase.from('running_debt_transactions').delete().eq('id', txId);
+        const { error } = await supabase.from('eh_running_debt_transactions').delete().eq('id', txId);
         if (error) throw new Error(error.message);
         return undefined as unknown as T;
       }
@@ -319,7 +319,7 @@ export async function handleSupabaseRequest<T>(method: string, path: string, bod
     if (segments[2] === 'transactions' && method === 'GET') {
       const debtId = segments[1];
       const { data, error } = await supabase
-        .from('running_debt_transactions')
+        .from('eh_running_debt_transactions')
         .select('*')
         .eq('debt_id', debtId)
         .order('date', { ascending: false })
@@ -335,20 +335,20 @@ export async function handleSupabaseRequest<T>(method: string, path: string, bod
     }
 
     if (method === 'GET' && !id) {
-      const { data, error } = await supabase.from('running_debts').select('*, users(email)').order('created_at', { ascending: false });
+      const { data, error } = await supabase.from('eh_running_debts').select('*, users:eh_users(email)').order('created_at', { ascending: false });
       if (error) throw new Error(error.message);
       return (data || []).map(formatSupabaseRecord) as unknown as T;
     }
     if (method === 'POST') {
       const userId = await getAuthUserId();
       const initialAmount = Number(body.total_amount) || 0;
-      const { data, error } = await supabase.from('running_debts').insert({ ...body, total_amount: initialAmount, amount_paid: body.amount_paid ?? 0, created_by: userId }).select('*, users(email)').single();
+      const { data, error } = await supabase.from('eh_running_debts').insert({ ...body, total_amount: initialAmount, amount_paid: body.amount_paid ?? 0, created_by: userId }).select('*, users:eh_users(email)').single();
       if (error) throw new Error(error.message);
 
       // Criar transação inicial de abertura do fiado apenas se tiver saldo inicial > 0
       if (initialAmount > 0) {
         try {
-          await supabase.from('running_debt_transactions').insert({
+          await supabase.from('eh_running_debt_transactions').insert({
             debt_id: data.id,
             type: 'charge',
             amount: initialAmount,
@@ -364,12 +364,12 @@ export async function handleSupabaseRequest<T>(method: string, path: string, bod
       return formatSupabaseRecord(data) as unknown as T;
     }
     if (method === 'PATCH' && id) {
-      const { data, error } = await supabase.from('running_debts').update(body).eq('id', id).select('*, users(email)').single();
+      const { data, error } = await supabase.from('eh_running_debts').update(body).eq('id', id).select('*, users:eh_users(email)').single();
       if (error) throw new Error(error.message);
       return formatSupabaseRecord(data) as unknown as T;
     }
     if (method === 'DELETE' && id) {
-      const { error } = await supabase.from('running_debts').delete().eq('id', id);
+      const { error } = await supabase.from('eh_running_debts').delete().eq('id', id);
       if (error) throw new Error(error.message);
       return undefined as unknown as T;
     }
@@ -379,7 +379,7 @@ export async function handleSupabaseRequest<T>(method: string, path: string, bod
   if (segments[0] === 'shared-accesses') {
     const id = segments[1];
     if (method === 'GET' && !id) {
-      let query = supabase.from('shared_accesses').select('*');
+      let query = supabase.from('eh_shared_accesses').select('*');
       const ownerEmail = searchParams.get('owner_email');
       const sharedWithEmail = searchParams.get('shared_with_email');
       if (ownerEmail) query = query.eq('owner_email', ownerEmail);
@@ -391,7 +391,7 @@ export async function handleSupabaseRequest<T>(method: string, path: string, bod
     }
     if (method === 'POST') {
       const { data: { user } } = await supabase.auth.getUser();
-      const { data, error } = await supabase.from('shared_accesses').insert({
+      const { data, error } = await supabase.from('eh_shared_accesses').insert({
         owner_email: user?.email?.toLowerCase().trim(),
         shared_with_email: body.shared_with_email?.toLowerCase().trim(),
         status: 'pending',
@@ -400,12 +400,12 @@ export async function handleSupabaseRequest<T>(method: string, path: string, bod
       return formatSupabaseRecord(data) as unknown as T;
     }
     if (method === 'PATCH' && id) {
-      const { data, error } = await supabase.from('shared_accesses').update(body).eq('id', id).select('*').single();
+      const { data, error } = await supabase.from('eh_shared_accesses').update(body).eq('id', id).select('*').single();
       if (error) throw new Error(error.message);
       return formatSupabaseRecord(data) as unknown as T;
     }
     if (method === 'DELETE' && id) {
-      const { error } = await supabase.from('shared_accesses').delete().eq('id', id);
+      const { error } = await supabase.from('eh_shared_accesses').delete().eq('id', id);
       if (error) throw new Error(error.message);
       return undefined as unknown as T;
     }
@@ -415,13 +415,13 @@ export async function handleSupabaseRequest<T>(method: string, path: string, bod
   if (segments[0] === 'incomes') {
     const id = segments[1];
     if (method === 'GET' && !id) {
-      const { data, error } = await supabase.from('incomes').select('*').order('created_at', { ascending: false });
+      const { data, error } = await supabase.from('eh_incomes').select('*').order('created_at', { ascending: false });
       if (error) throw new Error(error.message);
       return (data || []).map(formatSupabaseRecord) as unknown as T;
     }
     if (method === 'POST') {
       const { data: { user } } = await supabase.auth.getUser();
-      const { data, error } = await supabase.from('incomes').insert({
+      const { data, error } = await supabase.from('eh_incomes').insert({
         ...body,
         created_by: user?.id,
       }).select('*').single();
@@ -429,12 +429,12 @@ export async function handleSupabaseRequest<T>(method: string, path: string, bod
       return formatSupabaseRecord(data) as unknown as T;
     }
     if (method === 'PATCH' && id) {
-      const { data, error } = await supabase.from('incomes').update(body).eq('id', id).select('*').single();
+      const { data, error } = await supabase.from('eh_incomes').update(body).eq('id', id).select('*').single();
       if (error) throw new Error(error.message);
       return formatSupabaseRecord(data) as unknown as T;
     }
     if (method === 'DELETE' && id) {
-      const { error } = await supabase.from('incomes').delete().eq('id', id);
+      const { error } = await supabase.from('eh_incomes').delete().eq('id', id);
       if (error) throw new Error(error.message);
       return undefined as unknown as T;
     }
@@ -444,17 +444,17 @@ export async function handleSupabaseRequest<T>(method: string, path: string, bod
   if (segments[0] === 'users') {
     const id = segments[1];
     if (method === 'GET' && !id) {
-      const { data, error } = await supabase.from('users').select('*').order('created_at', { ascending: true });
+      const { data, error } = await supabase.from('eh_users').select('*').order('created_at', { ascending: true });
       if (error) throw new Error(error.message);
       return (data || []).map(formatSupabaseRecord) as unknown as T;
     }
     if (method === 'PATCH' && id) {
-      const { data, error } = await supabase.from('users').update(body).eq('id', id).select('*').single();
+      const { data, error } = await supabase.from('eh_users').update(body).eq('id', id).select('*').single();
       if (error) throw new Error(error.message);
       return formatSupabaseRecord(data) as unknown as T;
     }
     if (method === 'DELETE' && id) {
-      const { error } = await supabase.from('users').delete().eq('id', id);
+      const { error } = await supabase.from('eh_users').delete().eq('id', id);
       if (error) throw new Error(error.message);
       return undefined as unknown as T;
     }
